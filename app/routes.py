@@ -1,3 +1,4 @@
+import json
 from flask import request
 
 from app import app
@@ -20,5 +21,23 @@ def index():
 @app.route('/run_modelica_simulation', methods=['POST'])
 def run_modelica_simulation():
     data = request.get_data()
+    results_from_modelica_simulation = modelica_simulation_service.convert_simulate_modelica(data)
+    return results_from_modelica_simulation
+
+
+@app.route('/create_modelica_model', methods=['POST'])
+def create_modelica_model():
+    
+    data = request.get_data()
+
+    # Get data
+    data_parsed = json.loads(data)
+    system = modelica_simulation_service.extract_components_from_data(data_parsed) # Extract system from data
+
+    # Needs info on package/model name and simulation parameters (days)
+    package_name = "Auto_Generated"
+    model_name = "Model"
+    days = 1
+
     results_from_modelica_simulation = modelica_simulation_service.convert_simulate_modelica(data)
     return results_from_modelica_simulation
