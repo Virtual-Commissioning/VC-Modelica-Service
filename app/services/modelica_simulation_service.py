@@ -12,7 +12,7 @@ def convert_simulate_modelica(data):
 
     # Get data
     data_parsed = json.loads(data)
-    system = extract_system_from_data(data_parsed) # Extract system from data
+    system = extract_components_from_data(data_parsed,["heating"]) # Extract system from data
 
     # Needs info on package/model name and simulation parameters (days)
     package_name = "Auto_Generated"
@@ -59,15 +59,14 @@ def convert_simulate_modelica(data):
     
     return results
 
-def extract_system_from_data(data):
-       
-    # Extract components to one list:
-    system = []
-    system += data["system"]["SubSystems"]["heating"]["SupplySystem"]
-    system += data["system"]["SubSystems"]["heating"]["ReturnSystem"]
-    system += data["system"]["SubSystems"]["heating"]["Suppliers"]
-    system += data["system"]["SubSystems"]["heating"]["Consumers"]
-    return system
+def extract_components_from_data(data,wanted_systems):
+
+    components = []
+    
+    for sys in wanted_systems:
+        components += data["system"]["SubSystems"][sys]["Components"]
+    
+    return components
 
 def simulate_modelica_model(days,output_dir,package_path, solver="dassl",model = "Auto_Generated.Model"):
     # Parameters:
