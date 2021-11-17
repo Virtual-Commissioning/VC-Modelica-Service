@@ -135,4 +135,6 @@ dmypy.json
 temp
 app/temp
 
+# Workspace
 tests/
+.vscode/
