@@ -148,20 +148,20 @@ def radiator(comp):
 
 def heaCoil(comp):
     import math
-    delta_T_A = comp["t_supply_nominal_water"]-comp["t_return_nominal_air"]
-    delta_T_B = comp["t_return_nominal_water"]-comp["t_supply_nominal_air"]
+    delta_T_A = comp["NomSupplyTemperatureSecondary"]-comp["NomReturnTemperaturePrimary"]
+    delta_T_B = comp["NomReturnTemperatureSecondary"]-comp["NomSupplyTemperaturePrimary"]
     LMTD = (delta_T_A-delta_T_B)/(math.log(delta_T_A)-math.log(delta_T_B))
-    Q = comp["Q_flow_nominal"]
+    Q = comp["NomPower"]
     UA = Q/LMTD
     s = f'''
         Buildings.Fluid.HeatExchangers.DryCoilCounterFlow c{comp["Tag"]}(
             redeclare package Medium1 = MediumA,
             redeclare package Medium2 = MediumW,
-            m1_flow_nominal={comp["flow_nominal_air"]},
-            m2_flow_nominal={comp["flow_nominal_water"]},
+            m1_flow_nominal={comp["NomFlowPrimary"]},
+            m2_flow_nominal={comp["NomFlowSecondary"]},
             show_T=true,
-            dp1_nominal={comp["dp_nominal_air"]},
-            dp2_nominal={comp["dp_nominal_water"]},
+            dp1_nominal={comp["NomDpPrimary"]},
+            dp2_nominal={comp["NomDpSecondary"]},
             UA_nominal={round(UA,2)})
             annotation (Placement(transformation(extent={{{{{20+x_pos*30},{0+y_pos*30}}},{{{0+x_pos*30},{20+y_pos*30}}}}})));
         '''
