@@ -1,6 +1,13 @@
 from math import nan
 import math
 
+# Defaults for internal parameters - these are changed in the external scripts
+package_name = "AutoPackage"
+model_name = "AutoModel"
+x_pos = 0
+y_pos = 0
+
+
 def calculate_length(component):
     '''
     Calculates length of component
