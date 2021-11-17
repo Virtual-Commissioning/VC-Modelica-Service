@@ -1,3 +1,5 @@
+mo_file = ""
+
 def connector(comp):
     tags = [con["Tag"] for con in comp["ConnectedWith"] if con != None and "Direction" in con.keys()] # List with tags of connected components
     inout = [con["Direction"] for con in comp["ConnectedWith"] if con != None and "Direction" in con.keys()] # List whether the above components are in- or output
