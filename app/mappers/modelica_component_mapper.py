@@ -121,13 +121,13 @@ def radiator(comp):
         ToolchainLib.Radiator c{comp["Tag"]}(
             redeclare package Medium = MediumW,
                                         rad(
-            Q_flow_nominal={comp["nominal_heat_flux"]},
-            T_a_nominal={comp["nominal_supply_temp"]+273.15},
-            T_b_nominal={comp["nominal_return_temp"]+273.15},
+            Q_flow_nominal={comp["NomPower"]},
+            T_a_nominal={comp["NomSupplyTemperature"]+273.15},
+            T_b_nominal={comp["NomReturnTemperature"]+273.15},
             {ispropin('n',comp)}
             {ispropin('fraRad',comp)}
-            dp_nominal={comp["nominal_pressure_loss"]},
-            TAir_nominal={comp["nominal_room_temp"]+273.15})'''
+            dp_nominal={comp["NomDp"]},
+            TAir_nominal={comp["NomRoomTemperature"]+273.15})'''
     if "KV" in comp.keys():
         s+= f''',
             trv(Kv={comp["KV"]}))

@@ -28,8 +28,8 @@ def map_to_modelica_model(system,days,package_name = "Auto_Generated", model_nam
             mo_file += comp_mapper.segment(component)
         elif component["ComponentType"] == "Pump":
             mo_file += comp_mapper.pump(component)
-        # elif component["ComponentType"] == "Radiator":
-        #     mo_file += comp_mapper.radiator(component)
+        elif component["ComponentType"] == "Radiator":
+            mo_file += comp_mapper.radiator(component)
         # elif component["ComponentType"] == "HeatExchanger":
         #     mo_file += comp_mapper.heaCoil(component)
         # elif component["ComponentType"] == "Bend":
