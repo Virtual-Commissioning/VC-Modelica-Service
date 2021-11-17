@@ -1,3 +1,35 @@
+from math import nan
+import math
+
+def calculate_length(component):
+    '''
+    Calculates length of component
+    '''
+    length = None
+    if None not in component["ConnectedWith"]:
+        len_X = component["ConnectedWith"][0]["Coordinate"]["X"] - \
+            component["ConnectedWith"][1]["Coordinate"]["X"]
+        len_Y = component["ConnectedWith"][0]["Coordinate"]["Y"] - \
+            component["ConnectedWith"][1]["Coordinate"]["Y"]
+        len_Z = component["ConnectedWith"][0]["Coordinate"]["Z"] - \
+            component["ConnectedWith"][1]["Coordinate"]["Z"]
+        length = round(math.sqrt(len_X**2+len_Y**2+len_Z**2),2)
+    elif "length" in component.keys() and component["length"] == None and None in component["ConnectedWith"]:
+        length = None
+    return length
+
+def calculate_diameter(comp):
+    """
+    Calculates hydraulic diameter of round and rectangular pipes and ducts
+    """
+    if [conn["Shape"] for conn in comp["ConnectedWith"] if conn != None][0] == "Round":
+        hyd_diameter = [conn["Dimension"][0] for conn in comp["ConnectedWith"] if conn != None][0]
+    elif comp["ConnectedWith"][0]["Shape"] == "Rectangular":
+        a = [conn["Dimension"][0] for conn in comp["ConnectedWith"] if conn != None][0]
+        b = [conn["Dimension"][1] for conn in comp["ConnectedWith"] if conn != None][0]
+        hyd_diameter = 2*a*b/(a+b)
+    return hyd_diameter
+
 def model_start(): # Starting text of model - define media
     s = f''' within {package_name};
     model {model_name} "Auto-generated model"
@@ -17,40 +49,55 @@ def model_end(days): # Last part of model
     return s
 
 def segment(comp):
-    dimension = [conn["Dimension"] for conn in comp["ConnectedWith"] if conn != None][0]
+    
+
+    # dimension = [conn["Dimension"] for conn in comp["ConnectedWith"] if conn != None][0]
+    dimension = calculate_diameter(comp)
+    nom_flow = [conn["DesignFlow"] for conn in comp["ConnectedWith"] if conn != None][0]
+    length = calculate_length(comp)
     s = f'''
         Buildings.Fluid.FixedResistances.Pipe c{comp["Tag"]}(
             redeclare package Medium = MediumW,
             allowFlowReversal=true,
-            m_flow_nominal={comp["nom_flow"]},
-            thicknessIns={comp["insulation"]["thickness"]},
-            lambdaIns={comp["insulation"]["lambda"]},
+            m_flow_nominal={nom_flow},
+            thicknessIns={None},
+            lambdaIns={None},
             diameter={dimension},
             nSeg=2,
-            length={comp["length"]}) 
+            length={length}) 
             annotation (Placement(transformation(extent={{{{{0+x_pos*30},{0+y_pos*30}}},{{{20+x_pos*30},{20+y_pos*30}}}}})));
         '''
     return s
 
 def pump(comp):
-    if comp["control_type"] == "constant_speed":
+    if comp["Control"]["ControlType"] == "ConstantSpeedControl":
         s = f'''
         ToolchainLib.PumpConstantSpeed c{comp["Tag"]}(
             redeclare package Medium = MediumW,
-            speed={comp["speed"]},
-            pum(per(
-            pressure(V_flow={{{', '.join(map(str,comp["per"]["V_flow"]))}}}, dp={{{', '.join(map(str,comp["per"]["pressure"]))}}}),
+            speed={comp["Control"]["Speed"]},
+            pum(
+            per(pressure(V_flow={{{', '.join(map(str,list(comp["PressureCurve"].keys())))}}}, dp={{{', '.join(map(str,list(comp["PressureCurve"].values())))}}}),
             use_powerCharacteristic=true,
-            power(V_flow={{{', '.join(map(str,comp["per"]["V_flow"]))}}}, P={{{', '.join(map(str,comp["per"]["power"]))}}}))))
+            power(V_flow={{{', '.join(map(str,list(comp["PowerCurve"].keys())))}}}, P={{{', '.join(map(str,list(comp["PowerCurve"].values())))}}}))))
             annotation (Placement(transformation(extent={{{{{0+x_pos*30},{0+y_pos*30}}},{{{20+x_pos*30},{20+y_pos*30}}}}})));
         '''
-    elif comp["control_type"] == "constant_pressure":
+    elif comp["Control"]["ControlType"] == "ConstantPressureControl":
         s=f'''
         ToolchainLib.PumpConstantPressure c{comp["Tag"]}(
             redeclare package Medium = MediumW,
-            pum(p_start(displayUnit="Pa") = {comp["Head"]}, per(pressure(V_flow={{{', '.join(map(str,comp["per"]["V_flow"]))}}}, dp={{{', '.join(map(str,comp["per"]["pressure"]))}}}), 
-            power(V_flow={{{', '.join(map(str,comp["per"]["V_flow"]))}}}, P={{{', '.join(map(str,comp["per"]["power"]))}}}))),
-            constPressure(displayUnit="Pa") = {comp["Head"]})
+            pum(p_start(displayUnit="Pa") = {comp["Control"]["Pressure"]},
+            per(pressure(V_flow={{{', '.join(map(str,list(comp["PressureCurve"].keys())))}}}, dp={{{', '.join(map(str,list(comp["PressureCurve"].values())))}}}),
+            power(V_flow={{{', '.join(map(str,list(comp["PowerCurve"].keys())))}}}, P={{{', '.join(map(str,list(comp["PowerCurve"].values())))}}}))),
+            constPressure(displayUnit="Pa") = {comp["Control"]["Pressure"]})
+            annotation (Placement(transformation(extent={{{{{0+x_pos*30},{0+y_pos*30}}},{{{20+x_pos*30},{20+y_pos*30}}}}})));
+        '''
+    elif comp["Control"]["ControlType"] == "External":
+        s=f'''
+        Buildings.Fluid.Movers.SpeedControlled_y c{comp["Tag"]}(
+            redeclare package Medium = MediumW,
+            per(pressure(V_flow={{{', '.join(map(str,list(comp["PressureCurve"].keys())))}}}, dp={{{', '.join(map(str,list(comp["PressureCurve"].values())))}}}),
+            use_powerCharacteristic=true,
+            power(V_flow={{{', '.join(map(str,list(comp["PowerCurve"].keys())))}}}, P={{{', '.join(map(str,list(comp["PowerCurve"].values())))}}})))
             annotation (Placement(transformation(extent={{{{{0+x_pos*30},{0+y_pos*30}}},{{{20+x_pos*30},{20+y_pos*30}}}}})));
         '''
     else:

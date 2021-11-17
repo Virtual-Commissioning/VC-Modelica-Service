@@ -14,7 +14,7 @@ def map_to_modelica_model(system,days,package_name = "Auto_Generated", model_nam
     comp_mapper.package_name = package_name
 
     # Enrich/manipulate data:
-    system = enrich(system)
+    # system = enrich(system)
 
     # Write first lines of model:
     mo_file = comp_mapper.model_start()
@@ -24,38 +24,38 @@ def map_to_modelica_model(system,days,package_name = "Auto_Generated", model_nam
     for component in system:
         comp_mapper.x_pos = counter % gridwidth
         comp_mapper.y_pos = int((counter - comp_mapper.x_pos)/gridwidth)
-        if component["ComponentType"] == "Segment":
+        if component["ComponentType"] == "FlowSegment":
             mo_file += comp_mapper.segment(component)
-        elif component["ComponentType"] == "FlowMovingDevice":
+        elif component["ComponentType"] == "Pump":
             mo_file += comp_mapper.pump(component)
-        elif component["ComponentType"] == "Radiator":
-            mo_file += comp_mapper.radiator(component)
-        elif component["ComponentType"] == "HeatExchanger":
-            mo_file += comp_mapper.heaCoil(component)
-        elif component["ComponentType"] == "Bend":
-            mo_file += comp_mapper.bend(component)
-        elif component["ComponentType"] == "Tee":
-            mo_file += comp_mapper.tee(component)
-        elif component["ComponentType"] == "FlowController":
-            mo_file += comp_mapper.valve(component)
+        # elif component["ComponentType"] == "Radiator":
+        #     mo_file += comp_mapper.radiator(component)
+        # elif component["ComponentType"] == "HeatExchanger":
+        #     mo_file += comp_mapper.heaCoil(component)
+        # elif component["ComponentType"] == "Bend":
+        #     mo_file += comp_mapper.bend(component)
+        # elif component["ComponentType"] == "Tee":
+        #     mo_file += comp_mapper.tee(component)
+        # elif component["ComponentType"] == "FlowController":
+        #     mo_file += comp_mapper.valve(component)
         else:
             mo_file += f'''
             // Component with Tag {component["Tag"]} of type {component["ComponentType"]} not recognized.'''
         counter += 1
 
     # Instantiation of plant
-    mo_file += comp_mapper.plant(system)
+    # mo_file += comp_mapper.plant(system)
     
     # Instantiation of room
-    mo_file += comp_mapper.room()
+    # mo_file += comp_mapper.room()
 
     mo_file+= '''
     equation'''
     
     # Create connectors
-    for component in system:
-        conn_mapper.mo_file = mo_file # Used for identifying previous connections
-        mo_file += conn_mapper.connector(component)
+    # for component in system:
+    #     conn_mapper.mo_file = mo_file # Used for identifying previous connections
+    #     mo_file += conn_mapper.connector(component)
     
     # Add end of model
     mo_file+= comp_mapper.model_end(days)
