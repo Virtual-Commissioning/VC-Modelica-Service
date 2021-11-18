@@ -42,6 +42,8 @@ def map_to_modelica_model(system,days,package_name = "Auto_Generated", model_nam
             mo_file += comp_mapper.valve_motorized(component)
         elif component["ComponentType"] == "ShuntValve":
             mo_file += comp_mapper.valve_shunt(component)
+        elif component["ComponentType"] == "Reduction":
+            mo_file += comp_mapper.reduction(component)
         else:
             mo_file += f'''
             // Component with Tag {component["Tag"]} of type {component["ComponentType"]} not recognized.'''
