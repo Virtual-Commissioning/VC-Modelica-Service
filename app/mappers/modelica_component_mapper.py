@@ -1,4 +1,3 @@
-from math import nan
 import math
 
 # Defaults for internal parameters - these are changed in the external scripts
@@ -56,9 +55,6 @@ def model_end(days): # Last part of model
     return s
 
 def segment(comp):
-    
-
-    # dimension = [conn["Dimension"] for conn in comp["ConnectedWith"] if conn != None][0]
     dimension = calculate_diameter(comp)
     nom_flow = [conn["DesignFlow"] for conn in comp["ConnectedWith"] if conn != None][0]
     length = calculate_length(comp)
@@ -147,7 +143,7 @@ def radiator(comp):
     return s
 
 def heaCoil(comp):
-    import math
+    
     delta_T_A = comp["NomSupplyTemperatureSecondary"]-comp["NomReturnTemperaturePrimary"]
     delta_T_B = comp["NomReturnTemperatureSecondary"]-comp["NomSupplyTemperaturePrimary"]
     LMTD = (delta_T_A-delta_T_B)/(math.log(delta_T_A)-math.log(delta_T_B))
@@ -168,16 +164,28 @@ def heaCoil(comp):
     return s
 
 def bend(comp):
-    import math
-    if "Angle" in comp.keys():
-        comp["delta"] = round(comp["Angle"]*math.pi/180,4)
+    import fluids
+
+    d = calculate_diameter(comp)
+    a = (d/2)**2*math.pi
+    v_flow = [conn["DesignFlow"] for conn in comp["ConnectedWith"] if conn != None][0]/1000 # Flow in m3/s
+    m_flow = v_flow*1000
+    v = v_flow/a
+    
+    if "Radius" not in comp.keys():
+        rc = d
+    else:
+        rc = comp["Radius"]
+    
+    re = fluids.Reynolds(v,d,nu=4.116e-7)
+    K = fluids.fittings.bend_rounded(d,90,rc=0.015,Re=re)
+    dp_nominal = K*1/2*1000*v**2
+
     s = f"""
-        Modelica.Fluid.Fittings.Bends.CurvedBend c{comp["Tag"]}(redeclare package Medium
-            = MediumW, geometry(
-            {ispropin('delta',comp)}
-            {ispropin('K',comp)}
-            d_hyd={comp["Dimension"]},
-            R_0={comp["Radius"]}))
+        Buildings.Fluid.FixedResistances.PressureDrop c{comp["Tag"]}(
+            redeclare package Medium = MediumW,
+            m_flow_nominal={m_flow},
+            dp_nominal={dp_nominal})
             annotation (Placement(transformation(extent={{{{{0+x_pos*30},{0+y_pos*30}}},{{{20+x_pos*30},{20+y_pos*30}}}}})));
         """
     return s

@@ -32,8 +32,8 @@ def map_to_modelica_model(system,days,package_name = "Auto_Generated", model_nam
             mo_file += comp_mapper.radiator(component)
         elif component["ComponentType"] == "HeatExchanger":
             mo_file += comp_mapper.heaCoil(component)
-        # elif component["ComponentType"] == "Bend":
-        #     mo_file += comp_mapper.bend(component)
+        elif component["ComponentType"] == "Bend":
+            mo_file += comp_mapper.bend(component)
         # elif component["ComponentType"] == "Tee":
         #     mo_file += comp_mapper.tee(component)
         # elif component["ComponentType"] == "FlowController":
