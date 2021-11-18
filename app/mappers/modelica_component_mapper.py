@@ -191,15 +191,18 @@ def bend(comp):
     return s
 
 def tee(comp):
-    inports = [con["Direction"] for con in comp["ConnectedWith"]].count("In")
-    if inports == 1:
-        port3_dir = "-1"
-    elif inports == 2:
-        port3_dir = "1"
+    ports = comp["ConnectedWith"]
+    port_flows = []
+    for port in ports:
+        if port["ConnectorType"] == "suppliesFluidTo":
+            port_flows.append(-port["DesignFlow"])
+        else:
+            port_flows.append(port["DesignFlow"])
+        
     s = f"""
         Buildings.Fluid.FixedResistances.Junction c{comp["Tag"]}(
             redeclare package Medium = MediumW,
-            m_flow_nominal={{1,-1,{port3_dir}}},
+            m_flow_nominal={{{port_flows[0]},{port_flows[1]},{port_flows[2]}}},
             dp_nominal={{0,0,0}})
             annotation (Placement(transformation(extent={{{{{0+x_pos*30},{0+y_pos*30}}},{{{20+x_pos*30},{20+y_pos*30}}}}})));
         """
