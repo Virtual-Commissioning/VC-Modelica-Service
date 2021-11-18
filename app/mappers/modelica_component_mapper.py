@@ -39,6 +39,17 @@ def calculate_diameter(comp):
         hyd_diameter = 2*a*b/(a+b)
     return hyd_diameter
 
+def calculate_all_diameters(comp):
+    hyd_diameters = []
+    for conn in [conn for conn in comp["ConnectedWith"] if conn != None]:
+        if conn["Shape"] == "Round":
+            hyd_diameters.append(conn["Dimension"][0])
+        elif conn["Shape"] == "Rectangular":
+            a = conn["Dimension"][0]
+            b = conn["Dimension"][1]
+            hyd_diameters.append(2*a*b/(a+b))
+    return hyd_diameters
+
 def model_start(): # Starting text of model - define media
     s = f''' within {package_name};
     model {model_name} "Auto-generated model"
@@ -182,7 +193,7 @@ def bend(comp):
     
     re = fluids.Reynolds(v,d,nu=4.116e-7)
     K = fluids.fittings.bend_rounded(d,90,rc=0.015,Re=re)
-    dp_nominal = K*1/2*1000*v**2
+    dp_nominal = round(K*1/2*1000*v**2,4)
 
     s = f"""
         Buildings.Fluid.FixedResistances.PressureDrop c{comp["Tag"]}(
@@ -274,6 +285,32 @@ def valve_shunt(comp):
 
     return s
 
+def reduction(comp):
+    import fluids
+
+    length = calculate_length_between_ports(comp["ConnectedWith"][0],comp["ConnectedWith"][1])
+    
+    diameters = calculate_all_diameters(comp)
+    d1 = max(diameters)
+    d2 = min(diameters)
+    
+    k2 = fluids.fittings.contraction_conical_Crane(d1,d2,length)
+    
+    m_flow = [conn["DesignFlow"] for conn in comp["ConnectedWith"] if conn != None][0] # kg/s or l/s
+    v_flow = m_flow/1000 # m3/h
+    
+    v2 = v_flow/((d2/2)**2*math.pi)
+    
+    dp_nominal = round(k2*1/2*1000*v2**2,4)
+
+    s = f"""
+        Buildings.Fluid.FixedResistances.PressureDrop c{comp["Tag"]}(
+            redeclare package Medium = MediumW,
+            m_flow_nominal={m_flow},
+            dp_nominal={dp_nominal})
+            annotation (Placement(transformation(extent={{{{{0+x_pos*30},{0+y_pos*30}}},{{{20+x_pos*30},{20+y_pos*30}}}}})));
+        """
+    return s
 
 def plant(system):
     '''
