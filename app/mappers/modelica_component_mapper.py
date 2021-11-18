@@ -6,20 +6,23 @@ model_name = "AutoModel"
 x_pos = 0
 y_pos = 0
 
+def calculate_length_between_ports(port1,port2):
+    len_X = port1["Coordinate"]["X"] - \
+        port2["Coordinate"]["X"]
+    len_Y = port1["Coordinate"]["Y"] - \
+        port2["Coordinate"]["Y"]
+    len_Z = port1["Coordinate"]["Z"] - \
+        port2["Coordinate"]["Z"]
+    length = round(math.sqrt(len_X**2+len_Y**2+len_Z**2),2)
+    return length
 
 def calculate_length(component):
     '''
-    Calculates length of component
+    Calculates length of a segment
     '''
     length = None
     if None not in component["ConnectedWith"]:
-        len_X = component["ConnectedWith"][0]["Coordinate"]["X"] - \
-            component["ConnectedWith"][1]["Coordinate"]["X"]
-        len_Y = component["ConnectedWith"][0]["Coordinate"]["Y"] - \
-            component["ConnectedWith"][1]["Coordinate"]["Y"]
-        len_Z = component["ConnectedWith"][0]["Coordinate"]["Z"] - \
-            component["ConnectedWith"][1]["Coordinate"]["Z"]
-        length = round(math.sqrt(len_X**2+len_Y**2+len_Z**2),2)
+        length = calculate_length_between_ports(component["ConnectedWith"][0],component["ConnectedWith"][1])
     elif "length" in component.keys() and component["length"] == None and None in component["ConnectedWith"]:
         length = None
     return length
@@ -208,66 +211,69 @@ def tee(comp):
         """
     return s
 
-def valve(comp):
-    '''
-    Parsing of valves. Kv is currently hardcoded, but could be defined by Kvs and a constant control
-    '''
-    s = ""
-    if "Kv" not in comp.keys():
-        comp["Kv"] = comp["Kvs"]
-    
-    if comp["ValveType"] == "STAD":
-        if "Kv" in comp.keys():
-            y = comp["Kv"]/comp["Kvs"]
-        else:
-            y = 1
-        s = f"""
+def valve_balancing(comp):
+    """
+    Mapping for balancing valves
+    """
+
+    s = f"""
         Buildings.Fluid.Actuators.Valves.TwoWayLinear c{comp["Tag"]}(
             redeclare package Medium = MediumW, 
-            m_flow_nominal= {comp["nom_flow"]},
+            m_flow_nominal= {[conn["DesignFlow"] for conn in comp["ConnectedWith"] if conn != None][0]},
+            CvData=Buildings.Fluid.Types.CvTypes.Kv,
+            Kv={comp["Kv"]})
+            annotation (Placement(transformation(extent={{{{{0+x_pos*30},{0+y_pos*30}}},{{{20+x_pos*30},{20+y_pos*30}}}}})));
+    """
+
+    return s
+
+
+def valve_motorized(comp):
+    """
+    Mapping for motorized valves
+    """
+
+    s = f"""
+        Buildings.Fluid.Actuators.Valves.TwoWayEqualPercentage c{comp["Tag"]}(
+            redeclare package Medium = MediumW, 
+            m_flow_nominal= {[conn["DesignFlow"] for conn in comp["ConnectedWith"] if conn != None][0]},
             CvData=Buildings.Fluid.Types.CvTypes.Kv,
             Kv={comp["Kvs"]})
             annotation (Placement(transformation(extent={{{{{0+x_pos*30},{0+y_pos*30}}},{{{20+x_pos*30},{20+y_pos*30}}}}})));
-        
-          Modelica.Blocks.Sources.Constant valCon{comp["Tag"]}(k={y})
-          annotation (Placement(transformation(extent={{{{-30,-30}},{{-10,-10}}}})));
-        """
-    if comp["ValveType"] == "ASV-PV":
-        if "Kv" in comp.keys():
-            y = comp["Kv"]/comp["Kvs"]
-        else:
-            y = 1
-        s = f"""
-        Buildings.Fluid.Actuators.Valves.TwoWayPressureIndependent c{comp["Tag"]}(
-            m_flow_nominal={comp["nom_flow"]},
-            show_T=true,
-            CvData=Buildings.Fluid.Types.CvTypes.Kv,
-            Kv={comp["Kvs"]},
-            redeclare package Medium = MediumW)
-            annotation (Placement(transformation(extent={{{{{0+x_pos*30},{0+y_pos*30}}},{{{20+x_pos*30},{20+y_pos*30}}}}})));
-        
-          Modelica.Blocks.Sources.Constant valCon{comp["Tag"]}(k={y})
-          annotation (Placement(transformation(extent={{{{-30,-30}},{{-10,-10}}}})));
-        """
-    if comp["ValveType"] == "KONT":
-        s = f"""
-        Buildings.Fluid.FixedResistances.CheckValve c{comp["Tag"]}(
-            m_flow_nominal={comp["nom_flow"]},
-            CvData=Buildings.Fluid.Types.CvTypes.Kv,
-            Kv={comp["Kvs"]},
-            redeclare package Medium = MediumW)
-            annotation (Placement(transformation(extent={{{{{0+x_pos*30},{0+y_pos*30}}},{{{20+x_pos*30},{20+y_pos*30}}}}})));
-        """
-    if comp["ValveType"] == "MOTOR":
-        s = f"""
-        ToolchainLib.MotorValve c{comp["Tag"]}(
-            redeclare package Medium = MediumW,
-            tempSP=18,
-            Kv={comp["Kvs"]},
-            m_flow_nom={comp["nom_flow"]})
-            annotation (Placement(transformation(extent={{{{{0+x_pos*30},{0+y_pos*30}}},{{{20+x_pos*30},{20+y_pos*30}}}}})));
-        """
+    """
+
     return s
+
+
+def valve_check(comp):
+    s = f"""
+        Buildings.Fluid.FixedResistances.CheckValve c{comp["Tag"]}(
+            m_flow_nominal={[conn["DesignFlow"] for conn in comp["ConnectedWith"] if conn != None][0]},
+            CvData=Buildings.Fluid.Types.CvTypes.Kv,
+            Kv={comp["Kvs"]},
+            redeclare package Medium = MediumW)
+            annotation (Placement(transformation(extent={{{{{0+x_pos*30},{0+y_pos*30}}},{{{20+x_pos*30},{20+y_pos*30}}}}})));
+    """
+
+    return s
+
+
+def valve_shunt(comp):
+    # Find width of shunt:
+
+    ports = comp["ConnectedWith"]
+    width = min([calculate_length_between_ports(i,j) for j in ports for i in ports if i != j])
+
+    s = f"""
+        ToolchainLib.Shunt c{comp["Tag"]}(res(
+            m_flow_nominal={[conn["DesignFlow"] for conn in comp["ConnectedWith"] if conn != None][0]},
+            dh={comp["ShuntDiameter"]},
+            length={width}))
+            annotation (Placement(transformation(extent={{{{{0+x_pos*30},{0+y_pos*30}}},{{{20+x_pos*30},{20+y_pos*30}}}}})));
+    """
+
+    return s
+
 
 def plant(system):
     '''

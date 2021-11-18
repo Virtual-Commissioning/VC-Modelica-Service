@@ -36,8 +36,12 @@ def map_to_modelica_model(system,days,package_name = "Auto_Generated", model_nam
             mo_file += comp_mapper.bend(component)
         elif component["ComponentType"] == "Tee":
             mo_file += comp_mapper.tee(component)
-        # elif component["ComponentType"] == "FlowController":
-        #     mo_file += comp_mapper.valve(component)
+        elif component["ComponentType"] == "BalancingValve":
+            mo_file += comp_mapper.valve_balancing(component)
+        elif component["ComponentType"] == "MotorizedValve":
+            mo_file += comp_mapper.valve_motorized(component)
+        elif component["ComponentType"] == "ShuntValve":
+            mo_file += comp_mapper.valve_shunt(component)
         else:
             mo_file += f'''
             // Component with Tag {component["Tag"]} of type {component["ComponentType"]} not recognized.'''
