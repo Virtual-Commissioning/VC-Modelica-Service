@@ -128,7 +128,7 @@ def radiator(comp):
     s = f'''
         ToolchainLib.Radiator c{comp["Tag"]}(
             redeclare package Medium = MediumW,
-                                        rad(
+            rad(
             Q_flow_nominal={comp["NomPower"]},
             T_a_nominal={comp["NomSupplyTemperature"]+273.15},
             T_b_nominal={comp["NomReturnTemperature"]+273.15},
