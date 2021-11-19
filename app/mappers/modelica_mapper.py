@@ -16,8 +16,7 @@ def map_to_modelica_model(system,days,package_name = "Auto_Generated", model_nam
     # Enrich/manipulate data:
     # system = enrich(system)
 
-    # Write first lines of model:
-    mo_file = comp_mapper.model_start()
+    component_string = ''
 
     counter = 0 # Counter for distribution of components
     gridwidth = 9 # Width of the visual distribution of the components
@@ -25,39 +24,51 @@ def map_to_modelica_model(system,days,package_name = "Auto_Generated", model_nam
         comp_mapper.x_pos = counter % gridwidth
         comp_mapper.y_pos = int((counter - comp_mapper.x_pos)/gridwidth)
         if component["ComponentType"] == "FlowSegment":
-            mo_file += comp_mapper.segment(component)
+            component_string += comp_mapper.segment(component)
+            #     conn_mapper.mo_file = mo_file # Used for identifying previous connections
+            #     mo_file += conn_mapper.connector(component)
         elif component["ComponentType"] == "Pump":
-            mo_file += comp_mapper.pump(component)
+            component_string += comp_mapper.pump(component)
         elif component["ComponentType"] == "Radiator":
-            mo_file += comp_mapper.radiator(component)
+            component_string += comp_mapper.radiator(component)
         elif component["ComponentType"] == "HeatExchanger":
-            mo_file += comp_mapper.heaCoil(component)
+            component_string += comp_mapper.heaCoil(component)
         elif component["ComponentType"] == "Bend":
-            mo_file += comp_mapper.bend(component)
+            component_string += comp_mapper.bend(component)
         elif component["ComponentType"] == "Tee":
-            mo_file += comp_mapper.tee(component)
+            component_string += comp_mapper.tee(component)
         elif component["ComponentType"] == "BalancingValve":
-            mo_file += comp_mapper.valve_balancing(component)
+            component_string += comp_mapper.valve_balancing(component)
         elif component["ComponentType"] == "MotorizedValve":
-            mo_file += comp_mapper.valve_motorized(component)
+            component_string += comp_mapper.valve_motorized(component)
         elif component["ComponentType"] == "ShuntValve":
-            mo_file += comp_mapper.valve_shunt(component)
+            component_string += comp_mapper.valve_shunt(component)
         elif component["ComponentType"] == "Reduction":
-            mo_file += comp_mapper.reduction(component)
+            component_string += comp_mapper.reduction(component)
         else:
-            mo_file += f'''
+            component_string += f'''
             // Component with Tag {component["Tag"]} of type {component["ComponentType"]} not recognized.'''
         counter += 1
+    
+    
+    # Create modelica model file
 
+    # Write first lines:
+    mo_file = comp_mapper.model_start()
+
+    mo_file += component_string
     # Instantiation of plant
     # mo_file += comp_mapper.plant(system)
     
     # Instantiation of room
     # mo_file += comp_mapper.room()
 
+    # Switch to connections
     mo_file+= '''
     equation'''
     
+    # mo_file += connector_string
+
     # Create connectors
     # for component in system:
     #     conn_mapper.mo_file = mo_file # Used for identifying previous connections
