@@ -23,6 +23,14 @@ def map_to_modelica_model(system,days,package_name = "Auto_Generated", model_nam
     for component in system:
         comp_mapper.x_pos = counter % gridwidth
         comp_mapper.y_pos = int((counter - comp_mapper.x_pos)/gridwidth)
+
+        if "heating" in component["SystemType"]:
+            comp_mapper.medium = "MediumHeating"
+        elif "ventilation" in component["SystemType"]:
+            comp_mapper.medium = "MediumVentilation"
+        elif "cooling" in component["SystemType"]:
+            comp_mapper.medium = "MediumCooling"
+
         if component["ComponentType"] == "FlowSegment":
             component_string += comp_mapper.segment(component)
             #     conn_mapper.mo_file = mo_file # Used for identifying previous connections

@@ -3,6 +3,7 @@ import math
 # Defaults for internal parameters - these are changed in the external scripts
 package_name = "AutoPackage"
 model_name = "AutoModel"
+medium = "MediumHeating"
 x_pos = 0
 y_pos = 0
 
@@ -45,9 +46,11 @@ def model_start(): # Starting text of model - define media
     s = f''' within {package_name};
     model {model_name} "Auto-generated model"
         
-        package MediumW = Buildings.Media.Water(T_default=273.15+70) annotation (
+        package MediumHeating = Buildings.Media.Water(T_default=273.15+70) annotation (
             __Dymola_choicesAllMatching=true);
-        package MediumA = Buildings.Media.Air annotation (
+        package MediumCooling = Buildings.Media.Water(T_default=273.15+5) annotation (
+            __Dymola_choicesAllMatching=true);
+        package MediumVentilation = Buildings.Media.Air annotation (
             __Dymola_choicesAllMatching=true);
     '''
     return s
@@ -65,7 +68,7 @@ def segment(comp):
     length = calculate_length(comp)
     s = f'''
         Buildings.Fluid.FixedResistances.Pipe c{comp["Tag"]}(
-            redeclare package Medium = MediumW,
+            redeclare package Medium = {medium},
             allowFlowReversal=true,
             m_flow_nominal={nom_flow},
             thicknessIns={None},
@@ -81,7 +84,7 @@ def pump(comp):
     if comp["Control"]["ControlType"] == "ConstantSpeedControl":
         s = f'''
         ToolchainLib.PumpConstantSpeed c{comp["Tag"]}(
-            redeclare package Medium = MediumW,
+            redeclare package Medium = {medium},
             speed={comp["Control"]["Speed"]},
             pum(
             per(pressure(V_flow={{{', '.join(map(str,list(comp["PressureCurve"].keys())))}}}, dp={{{', '.join(map(str,list(comp["PressureCurve"].values())))}}}),
@@ -92,7 +95,7 @@ def pump(comp):
     elif comp["Control"]["ControlType"] == "ConstantPressureControl":
         s=f'''
         ToolchainLib.PumpConstantPressure c{comp["Tag"]}(
-            redeclare package Medium = MediumW,
+            redeclare package Medium = {medium},
             pum(p_start(displayUnit="Pa") = {comp["Control"]["Pressure"]},
             per(pressure(V_flow={{{', '.join(map(str,list(comp["PressureCurve"].keys())))}}}, dp={{{', '.join(map(str,list(comp["PressureCurve"].values())))}}}),
             power(V_flow={{{', '.join(map(str,list(comp["PowerCurve"].keys())))}}}, P={{{', '.join(map(str,list(comp["PowerCurve"].values())))}}}))),
@@ -102,7 +105,7 @@ def pump(comp):
     elif comp["Control"]["ControlType"] == "External":
         s=f'''
         Buildings.Fluid.Movers.SpeedControlled_y c{comp["Tag"]}(
-            redeclare package Medium = MediumW,
+            redeclare package Medium = {medium},
             per(pressure(V_flow={{{', '.join(map(str,list(comp["PressureCurve"].keys())))}}}, dp={{{', '.join(map(str,list(comp["PressureCurve"].values())))}}}),
             use_powerCharacteristic=true,
             power(V_flow={{{', '.join(map(str,list(comp["PowerCurve"].keys())))}}}, P={{{', '.join(map(str,list(comp["PowerCurve"].values())))}}})))
@@ -130,7 +133,7 @@ def radiator(comp):
 
     s = f'''
         ToolchainLib.Radiator c{comp["Tag"]}(
-            redeclare package Medium = MediumW,
+            redeclare package Medium = {medium},
             rad(
             Q_flow_nominal={comp["NomPower"]},
             T_a_nominal={comp["NomSupplyTemperature"]+273.15},
@@ -191,7 +194,7 @@ def bend(comp):
 
     s = f"""
         Buildings.Fluid.FixedResistances.PressureDrop c{comp["Tag"]}(
-            redeclare package Medium = MediumW,
+            redeclare package Medium = {medium},
             m_flow_nominal={m_flow},
             dp_nominal={dp_nominal})
             annotation (Placement(transformation(extent={{{{{0+x_pos*30},{0+y_pos*30}}},{{{20+x_pos*30},{20+y_pos*30}}}}})));
@@ -209,7 +212,7 @@ def tee(comp):
         
     s = f"""
         Buildings.Fluid.FixedResistances.Junction c{comp["Tag"]}(
-            redeclare package Medium = MediumW,
+            redeclare package Medium = {medium},
             m_flow_nominal={{{port_flows[0]},{port_flows[1]},{port_flows[2]}}},
             dp_nominal={{0,0,0}})
             annotation (Placement(transformation(extent={{{{{0+x_pos*30},{0+y_pos*30}}},{{{20+x_pos*30},{20+y_pos*30}}}}})));
@@ -223,7 +226,7 @@ def valve_balancing(comp):
 
     s = f"""
         Buildings.Fluid.Actuators.Valves.TwoWayLinear c{comp["Tag"]}(
-            redeclare package Medium = MediumW, 
+            redeclare package Medium = {medium}, 
             m_flow_nominal= {[conn["DesignFlow"] for conn in comp["ConnectedWith"] if conn != None][0]},
             CvData=Buildings.Fluid.Types.CvTypes.Kv,
             Kv={comp["Kv"]})
@@ -240,7 +243,7 @@ def valve_motorized(comp):
 
     s = f"""
         Buildings.Fluid.Actuators.Valves.TwoWayEqualPercentage c{comp["Tag"]}(
-            redeclare package Medium = MediumW, 
+            redeclare package Medium = {medium}, 
             m_flow_nominal= {[conn["DesignFlow"] for conn in comp["ConnectedWith"] if conn != None][0]},
             CvData=Buildings.Fluid.Types.CvTypes.Kv,
             Kv={comp["Kvs"]})
@@ -256,7 +259,7 @@ def valve_check(comp):
             m_flow_nominal={[conn["DesignFlow"] for conn in comp["ConnectedWith"] if conn != None][0]},
             CvData=Buildings.Fluid.Types.CvTypes.Kv,
             Kv={comp["Kvs"]},
-            redeclare package Medium = MediumW)
+            redeclare package Medium = {medium})
             annotation (Placement(transformation(extent={{{{{0+x_pos*30},{0+y_pos*30}}},{{{20+x_pos*30},{20+y_pos*30}}}}})));
     """
 
@@ -299,7 +302,7 @@ def reduction(comp):
 
     s = f"""
         Buildings.Fluid.FixedResistances.PressureDrop c{comp["Tag"]}(
-            redeclare package Medium = MediumW,
+            redeclare package Medium = {medium},
             m_flow_nominal={m_flow},
             dp_nominal={dp_nominal})
             annotation (Placement(transformation(extent={{{{{0+x_pos*30},{0+y_pos*30}}},{{{20+x_pos*30},{20+y_pos*30}}}}})));
@@ -316,7 +319,7 @@ def plant(system):
     nom_flow = [comp["nom_flow"] for comp in system if "nom_flow" in comp.keys()][0]
     s = f"""
         ToolchainLib.GenericPlant plant(
-            redeclare package Medium = MediumW,
+            redeclare package Medium = {medium},
             m_flow_nom={nom_flow},
             bou(use_T_in=true),
             setpoint=70)
