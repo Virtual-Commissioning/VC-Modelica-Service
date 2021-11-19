@@ -9,6 +9,25 @@ annotation (uses(Buildings(version="7.0.1"), Modelica(version="3.2.3"),Toolchain
 end {package_name};'''
     return s
 
+def fill_connected_port_names(system):
+    """
+    Fills the port names of all connections in connections
+    """
+    for comp in system:
+        for con in comp["ConnectedWith"]:
+            if con != None and con["Tag"] != "Not connected" and con["Tag"] in [comp["Tag"] for comp in system]:
+                s = "hello"
+                try:
+                    con["PortNames"], con["ComponentType"] = [(comp["PortNames"], comp["ComponentType"]) for comp in system if comp["Tag"] == con["Tag"]][0]
+                except:
+                    print(f"Port names for component {con['Tag']} could not be found.")
+
+            else:
+                con["PortNames"] = None
+                con["ComponentType"] = None
+    return system
+        
+
 def map_to_modelica_model(system,days,package_name = "Auto_Generated", model_name = "Model"):
     comp_mapper.model_name = model_name
     comp_mapper.package_name = package_name
@@ -17,6 +36,7 @@ def map_to_modelica_model(system,days,package_name = "Auto_Generated", model_nam
     # system = enrich(system)
 
     component_string = ''
+    connector_string = ''
 
     counter = 0 # Counter for distribution of components
     gridwidth = 9 # Width of the visual distribution of the components
@@ -32,33 +52,65 @@ def map_to_modelica_model(system,days,package_name = "Auto_Generated", model_nam
             comp_mapper.medium = "MediumCooling"
 
         if component["ComponentType"] == "FlowSegment":
-            component_string += comp_mapper.segment(component)
-            #     conn_mapper.mo_file = mo_file # Used for identifying previous connections
-            #     mo_file += conn_mapper.connector(component)
+            string, port_names = comp_mapper.segment(component)
+            component_string += string
+            component["PortNames"] = port_names
+
+            # conn_mapper.mo_file = connector_string # Used for identifying previous connections
+            # connector_string += conn_mapper.connector(component)
+
         elif component["ComponentType"] == "Pump":
-            component_string += comp_mapper.pump(component)
+            string, port_names = comp_mapper.pump(component)
+            component_string += string
+            component["PortNames"] = port_names
+            
         elif component["ComponentType"] == "Radiator":
-            component_string += comp_mapper.radiator(component)
+            string, port_names = comp_mapper.radiator(component)
+            component_string += string
+            component["PortNames"] = port_names
+            
         elif component["ComponentType"] == "HeatExchanger":
-            component_string += comp_mapper.heaCoil(component)
+            string, port_names = comp_mapper.heaCoil(component)
+            component_string += string
+            component["PortNames"] = port_names
+            
         elif component["ComponentType"] == "Bend":
-            component_string += comp_mapper.bend(component)
+            string, port_names = comp_mapper.bend(component)
+            component_string += string
+            component["PortNames"] = port_names
+            
         elif component["ComponentType"] == "Tee":
-            component_string += comp_mapper.tee(component)
+            string, port_names = comp_mapper.tee(component)
+            component_string += string
+            component["PortNames"] = port_names
+            
         elif component["ComponentType"] == "BalancingValve":
-            component_string += comp_mapper.valve_balancing(component)
+            string, port_names = comp_mapper.valve_balancing(component)
+            component_string += string
+            component["PortNames"] = port_names
+            
         elif component["ComponentType"] == "MotorizedValve":
-            component_string += comp_mapper.valve_motorized(component)
+            string, port_names = comp_mapper.valve_motorized(component)
+            component_string += string
+            component["PortNames"] = port_names
+            
         elif component["ComponentType"] == "ShuntValve":
-            component_string += comp_mapper.valve_shunt(component)
+            string, port_names = comp_mapper.valve_shunt(component)
+            component_string += string
+            component["PortNames"] = port_names
+            
         elif component["ComponentType"] == "Reduction":
-            component_string += comp_mapper.reduction(component)
+            string, port_names = comp_mapper.reduction(component)
+            component_string += string
+            component["PortNames"] = port_names
+            
         else:
             component_string += f'''
             // Component with Tag {component["Tag"]} of type {component["ComponentType"]} not recognized.'''
         counter += 1
     
-    
+    system = fill_connected_port_names(system)
+
     # Create modelica model file
 
     # Write first lines:
@@ -71,7 +123,7 @@ def map_to_modelica_model(system,days,package_name = "Auto_Generated", model_nam
     # Instantiation of room
     # mo_file += comp_mapper.room()
 
-    # Switch to connections
+    # Switch to equation part of model file
     mo_file+= '''
     equation'''
     

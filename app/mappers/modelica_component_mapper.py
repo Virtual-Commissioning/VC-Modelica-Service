@@ -78,7 +78,11 @@ def segment(comp):
             length={length}) 
             annotation (Placement(transformation(extent={{{{{0+x_pos*30},{0+y_pos*30}}},{{{20+x_pos*30},{20+y_pos*30}}}}})));
         '''
-    return s
+    port_names = {
+        "inport": "port_a",
+        "outport": "port_b"
+    }
+    return s, port_names
 
 def pump(comp):
     if comp["Control"]["ControlType"] == "ConstantSpeedControl":
@@ -115,7 +119,11 @@ def pump(comp):
         s = f'''
         // Control type of pump {comp["Tag"]} not recognized. 
         '''
-    return s
+    port_names = {
+        "inport": "port_a",
+        "outport": "port_b"
+    }
+    return s, port_names
 
 def ispropin(prop, comp):
     '''
@@ -151,7 +159,11 @@ def radiator(comp):
         s+= f''')
             annotation (Placement(transformation(extent={{{{{0+x_pos*30},{0+y_pos*30}}},{{{20+x_pos*30},{20+y_pos*30}}}}})));
         '''
-    return s
+    port_names = {
+        "inport": "port_a",
+        "outport": "port_b"
+    }
+    return s, port_names
 
 def heaCoil(comp):
     
@@ -172,7 +184,11 @@ def heaCoil(comp):
             UA_nominal={round(UA,2)})
             annotation (Placement(transformation(extent={{{{{20+x_pos*30},{0+y_pos*30}}},{{{0+x_pos*30},{20+y_pos*30}}}}})));
         '''
-    return s
+    port_names = {
+        "inport": "port_a",
+        "outport": "port_b"
+    }
+    return s, port_names
 
 def bend(comp):
     import fluids
@@ -199,7 +215,11 @@ def bend(comp):
             dp_nominal={dp_nominal})
             annotation (Placement(transformation(extent={{{{{0+x_pos*30},{0+y_pos*30}}},{{{20+x_pos*30},{20+y_pos*30}}}}})));
         """
-    return s
+    port_names = {
+        "inport": "port_a",
+        "outport": "port_b"
+    }
+    return s, port_names
 
 def tee(comp):
     ports = comp["ConnectedWith"]
@@ -217,7 +237,12 @@ def tee(comp):
             dp_nominal={{0,0,0}})
             annotation (Placement(transformation(extent={{{{{0+x_pos*30},{0+y_pos*30}}},{{{20+x_pos*30},{20+y_pos*30}}}}})));
         """
-    return s
+    port_names = {
+        "inport": "port_1",
+        "outport": "port_2",
+        "secondaryport": "port_3"
+    }
+    return s, port_names
 
 def valve_balancing(comp):
     """
@@ -232,8 +257,11 @@ def valve_balancing(comp):
             Kv={comp["Kv"]})
             annotation (Placement(transformation(extent={{{{{0+x_pos*30},{0+y_pos*30}}},{{{20+x_pos*30},{20+y_pos*30}}}}})));
     """
-
-    return s
+    port_names = {
+        "inport": "port_a",
+        "outport": "port_b"
+    }
+    return s, port_names
 
 
 def valve_motorized(comp):
@@ -249,8 +277,11 @@ def valve_motorized(comp):
             Kv={comp["Kvs"]})
             annotation (Placement(transformation(extent={{{{{0+x_pos*30},{0+y_pos*30}}},{{{20+x_pos*30},{20+y_pos*30}}}}})));
     """
-
-    return s
+    port_names = {
+        "inport": "port_a",
+        "outport": "port_b"
+    }
+    return s, port_names
 
 
 def valve_check(comp):
@@ -262,8 +293,11 @@ def valve_check(comp):
             redeclare package Medium = {medium})
             annotation (Placement(transformation(extent={{{{{0+x_pos*30},{0+y_pos*30}}},{{{20+x_pos*30},{20+y_pos*30}}}}})));
     """
-
-    return s
+    port_names = {
+        "inport": "port_a",
+        "outport": "port_b"
+    }
+    return s, port_names
 
 
 def valve_shunt(comp):
@@ -279,8 +313,13 @@ def valve_shunt(comp):
             length={width}))
             annotation (Placement(transformation(extent={{{{{0+x_pos*30},{0+y_pos*30}}},{{{20+x_pos*30},{20+y_pos*30}}}}})));
     """
-
-    return s
+    port_names = {
+        "inport_supply": "port_a1",
+        "outport_supply": "port_b1",
+        "inport_return": "port_a2",
+        "outport_return": "port_b2"
+    }
+    return s, port_names
 
 def reduction(comp):
     import fluids
@@ -307,7 +346,11 @@ def reduction(comp):
             dp_nominal={dp_nominal})
             annotation (Placement(transformation(extent={{{{{0+x_pos*30},{0+y_pos*30}}},{{{20+x_pos*30},{20+y_pos*30}}}}})));
         """
-    return s
+    port_names = {
+        "inport": "port_a",
+        "outport": "port_b"
+    }
+    return s, port_names
 
 def plant(system):
     '''
