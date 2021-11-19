@@ -27,19 +27,10 @@ def calculate_length(component):
         length = None
     return length
 
-def calculate_diameter(comp):
+def calculate_diameters(comp):
     """
-    Calculates hydraulic diameter of round and rectangular pipes and ducts
+    Calculates hydraulic diameter of round and rectangular component connections
     """
-    if [conn["Shape"] for conn in comp["ConnectedWith"] if conn != None][0] == "Round":
-        hyd_diameter = [conn["Dimension"][0] for conn in comp["ConnectedWith"] if conn != None][0]
-    elif comp["ConnectedWith"][0]["Shape"] == "Rectangular":
-        a = [conn["Dimension"][0] for conn in comp["ConnectedWith"] if conn != None][0]
-        b = [conn["Dimension"][1] for conn in comp["ConnectedWith"] if conn != None][0]
-        hyd_diameter = 2*a*b/(a+b)
-    return hyd_diameter
-
-def calculate_all_diameters(comp):
     hyd_diameters = []
     for conn in [conn for conn in comp["ConnectedWith"] if conn != None]:
         if conn["Shape"] == "Round":
@@ -69,7 +60,7 @@ def model_end(days): # Last part of model
     return s
 
 def segment(comp):
-    dimension = calculate_diameter(comp)
+    dimension = calculate_diameters(comp)[0]
     nom_flow = [conn["DesignFlow"] for conn in comp["ConnectedWith"] if conn != None][0]
     length = calculate_length(comp)
     s = f'''
@@ -180,7 +171,7 @@ def heaCoil(comp):
 def bend(comp):
     import fluids
 
-    d = calculate_diameter(comp)
+    d = calculate_diameters(comp)[0]
     a = (d/2)**2*math.pi
     v_flow = [conn["DesignFlow"] for conn in comp["ConnectedWith"] if conn != None][0]/1000 # Flow in m3/s
     m_flow = v_flow*1000
@@ -290,7 +281,7 @@ def reduction(comp):
 
     length = calculate_length_between_ports(comp["ConnectedWith"][0],comp["ConnectedWith"][1])
     
-    diameters = calculate_all_diameters(comp)
+    diameters = calculate_diameters(comp)
     d1 = max(diameters)
     d2 = min(diameters)
     
