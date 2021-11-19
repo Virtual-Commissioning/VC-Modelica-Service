@@ -114,7 +114,10 @@ def pump(comp):
         '''
     return s
 
-def ispropin(prop, comp): # Function to check if a property is included in the component. If it is, it will return the property definition.
+def ispropin(prop, comp):
+    '''
+    Function to check if a property is included in the component. If it is, it will return the property definition.
+    '''
     if prop in comp.keys():
         return f'{prop} = {comp[prop]},'
     else:
@@ -183,7 +186,7 @@ def bend(comp):
         rc = comp["Radius"]
     
     re = fluids.Reynolds(v,d,nu=4.116e-7)
-    K = fluids.fittings.bend_rounded(d,90,rc=0.015,Re=re)
+    K = fluids.fittings.bend_rounded(d,90,rc=rc,Re=re)
     dp_nominal = round(K*1/2*1000*v**2,4)
 
     s = f"""
