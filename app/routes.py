@@ -5,7 +5,7 @@ import time
 
 from app import app
 from app.services import modelica_simulation_service
-
+from app.mappers.modelica_mapper import map_to_modelica_model
 
 @app.route('/')
 @app.route('/index')
@@ -20,12 +20,6 @@ def index():
     </body>
 </html>'''
 
-@app.route('/run_modelica_simulation', methods=['POST'])
-def run_modelica_simulation():
-    data = request.get_data()
-    results_from_modelica_simulation = modelica_simulation_service.convert_simulate_modelica(data)
-    return results_from_modelica_simulation
-
 
 @app.route('/create_modelica_model', methods=['POST'])
 def create_modelica_model():
@@ -36,14 +30,14 @@ def create_modelica_model():
     data_parsed = json.loads(data)
     wanted_systems = data_parsed["systems"]
     system = modelica_simulation_service.extract_components_from_data(data_parsed, wanted_systems) # Extract system from data
-
+    
     # Needs info on package/model name and simulation parameters (days)
     package_name = "Auto_Generated"
     model_name = "Model"
     days = 1
 
-    modelica_package = modelica_simulation_service.create_modelica_package(package_name)
-    modelica_model = modelica_simulation_service.map_to_modelica_model(system,days,package_name,model_name)
+    # modelica_package = create_modelica_package(package_name)
+    modelica_model, modelica_package = map_to_modelica_model(system,days,package_name,model_name)
 
     pa_path = f"temp\\{package_name}"
     if not os.path.exists(pa_path):
