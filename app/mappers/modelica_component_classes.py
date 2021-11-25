@@ -172,6 +172,12 @@ class ModelicaModel:
             for input_tag in input_tags:
                 self.connect(component, self.components[input_tag])
 
+class Medium():
+    def __init__(self, name, rho, temp):
+        self.name = name
+        self.rho = rho
+        self.temp = temp
+
 class MS4VCObject:
     model_template = ""
     connector_template = ""
@@ -201,11 +207,11 @@ class MS4VCObject:
 
     def find_medium(self):
         if "heating" in self.FSC_object["SystemType"]:
-            self.medium = "MediumHeating"
+            self.medium = Medium("MediumHeating", 977, 70)
         elif "ventilation" in self.FSC_object["SystemType"]:
-            self.medium = "MediumVentilation"
+            self.medium = Medium("MediumVentilation", 1000, 5)
         elif "cooling" in self.FSC_object["SystemType"]:
-            self.medium = "MediumCooling"
+            self.medium = Medium("MediumCooling", 1.2, 5)
         else:
             self.medium = self.FSC_object["SystemType"]
     
@@ -279,6 +285,7 @@ class Segment(MS4VCObject):
 
     def create_component_string(self):
         dimension = self.calculate_diameters()[0]
+        if 
         nom_flow = [conn["DesignFlow"] for conn in self.FSC_object["ConnectedWith"] if conn != None][0]
         length = self.calculate_length()
 
