@@ -1,7 +1,7 @@
 import json
 import os
 import time
-from app.mappers.modelica_mapper import map_to_modelica_model, create_modelica_package
+from app.mappers.modelica_mapper import map_to_modelica_model
 from buildingspy.simulate.Simulator import Simulator
 from buildingspy.io.outputfile import Reader
 
@@ -19,8 +19,7 @@ def convert_simulate_modelica(data):
     model_name = "Model"
     days = 1
 
-    modelica_package = create_modelica_package(package_name)
-    modelica_model = map_to_modelica_model(system,days,package_name,model_name)
+    modelica_model, modelica_package = map_to_modelica_model(system,days,package_name,model_name)
     
     pa_path = f"temp\\{package_name}"
     if not os.path.exists(pa_path):
