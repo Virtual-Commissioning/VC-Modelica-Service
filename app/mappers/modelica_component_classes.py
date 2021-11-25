@@ -213,7 +213,7 @@ class MS4VCObject:
         elif "cooling" in self.FSC_object["SystemType"]:
             self.medium = Medium("MediumCooling", 1.2, 5)
         else:
-            self.medium = self.FSC_object["SystemType"]
+            raise Exception("Can't determine medium of component")
     
     def create_component_string(self):
         self.component_string = f'''
@@ -285,7 +285,6 @@ class Segment(MS4VCObject):
 
     def create_component_string(self):
         dimension = self.calculate_diameters()[0]
-        if 
         nom_flow = [conn["DesignFlow"] for conn in self.FSC_object["ConnectedWith"] if conn != None][0]
         length = self.calculate_length()
 
