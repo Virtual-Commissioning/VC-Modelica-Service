@@ -135,7 +135,4 @@ dmypy.json
 temp
 app/temp
 
-# Workspace
 tests/
-.vscode/
-app/mappers/old_mappers/
