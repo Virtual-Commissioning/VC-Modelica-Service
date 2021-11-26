@@ -3,7 +3,6 @@ click==8.0.3
 colorama==0.4.4
 cycler==0.11.0
 Flask==2.0.2
-fluids==1.0.11
 future==0.18.2
 gitdb==4.0.9
 GitPython==3.1.24

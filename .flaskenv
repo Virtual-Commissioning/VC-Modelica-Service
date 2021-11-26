@@ -1,2 +1,1 @@
 FLASK_APP=modelicaservice.py
-FLASK_ENV=development
