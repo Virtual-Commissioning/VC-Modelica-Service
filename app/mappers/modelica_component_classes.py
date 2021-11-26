@@ -132,6 +132,12 @@ class ModelicaModel:
 
                 self.add_component(obj)
 
+            elif component["ComponentType"] == "Fan":
+                
+                obj = Fan(component, x_pos, y_pos)
+
+                self.add_component(obj)
+
             else:
 
                 obj = MS4VCObject(component, x_pos, y_pos)
@@ -786,3 +792,18 @@ class DamperMotorized(MS4VCObject):
             dpDamper_nominal={round(dp_nom, 2)})
             annotation (Placement(transformation(extent={{{{{0+self.x_pos*30},{0+self.y_pos*30}}},{{{20+self.x_pos*30},{20+self.y_pos*30}}}}})));
         """
+
+class Fan(MS4VCObject):
+    def __init__(self, FSC_object, x_pos, y_pos):
+
+        super().__init__(FSC_object,x_pos, y_pos)
+    
+    def create_component_string(self):
+        self.component_string = f'''
+        Buildings.Fluid.Movers.SpeedControlled_y {self.modelica_name}(
+            redeclare package Medium = {self.medium.name},
+            per(pressure(V_flow={{{', '.join(map(str,list(self.FSC_object["PressureCurve"].keys())))}}}, dp={{{', '.join(map(str,list(self.FSC_object["PressureCurve"].values())))}}}),
+            use_powerCharacteristic=true,
+            power(V_flow={{{', '.join(map(str,list(self.FSC_object["PowerCurve"].keys())))}}}, P={{{', '.join(map(str,list(self.FSC_object["PowerCurve"].values())))}}})))
+            annotation (Placement(transformation(extent={{{{{0+self.x_pos*30},{0+self.y_pos*30}}},{{{20+self.x_pos*30},{20+self.y_pos*30}}}}})));
+            '''
