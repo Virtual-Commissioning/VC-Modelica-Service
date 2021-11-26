@@ -782,12 +782,12 @@ class Outside(MS4VCObject):
         '''
         Overwrite find_medium method of super class since it is not used in class.
         '''
-        self.medium = None
+        pass
 
     def create_component_string(self):
         self.component_string = f"""
         Buildings.Fluid.Sources.Outside {self.modelica_name}(
-            redeclare package Medium = MediumA,
+            redeclare package Medium = Buildings.Media.Air,
             use_C_in=false,
             nPorts=2) "Outside air conditions"
             annotation (Placement(transformation(extent={{{{{0+self.x_pos*30},{0+self.y_pos*30}}},{{{20+self.x_pos*30},{20+self.y_pos*30}}}}})));
