@@ -783,6 +783,6 @@ class DamperMotorized(MS4VCObject):
         Buildings.Fluid.Actuators.Dampers.Exponential {self.modelica_name}(
             redeclare package Medium = {self.medium.name}, 
             m_flow_nominal= {round(m_nom_flow,6)},
-            dpDamper_nominal={round(dp_nom, 2)}))
+            dpDamper_nominal={round(dp_nom, 2)})
             annotation (Placement(transformation(extent={{{{{0+self.x_pos*30},{0+self.y_pos*30}}},{{{20+self.x_pos*30},{20+self.y_pos*30}}}}})));
         """
