@@ -79,10 +79,12 @@ class ModelicaModel:
                 self.add_component(obj)
                 
             elif component["ComponentType"] == "HeatExchanger":
+                if "ventilation" in component["SystemType"]:
+                    continue
+                else:
+                    obj = HeatingCoil(component, x_pos, y_pos)
 
-                obj = HeatingCoil(component, x_pos, y_pos)
-
-                self.add_component(obj)
+                    self.add_component(obj)
                 
             elif component["ComponentType"] == "Bend":
 
@@ -462,10 +464,11 @@ class HeatingCoil(MS4VCObject):
         LMTD = (delta_T_A-delta_T_B)/(math.log(delta_T_A)-math.log(delta_T_B))
         Q = self.FSC_object["NomPower"]
         UA = Q/LMTD
+
         self.component_string = f'''
         Buildings.Fluid.HeatExchangers.DryCoilCounterFlow {self.modelica_name}(
-            redeclare package Medium1 = MediumA,
-            redeclare package Medium2 = MediumW,
+            redeclare package Medium1 = {MediumVentilation().name},
+            redeclare package Medium2 = {self.medium.name},
             m1_flow_nominal={self.FSC_object["NomFlowPrimary"]},
             m2_flow_nominal={self.FSC_object["NomFlowSecondary"]},
             show_T=true,
@@ -490,7 +493,7 @@ class HeatingCoil(MS4VCObject):
         if len(self.instantiated_connections["output"]) >= 2:
             raise Exception("Max output connections (2) for component reached")
 
-        elif "ventilation" in connected_component.FSC_object["SystemType"]:
+        elif "ventilation" in connected_component.FSC_object["SystemType"] or connected_component.FSC_object["ComponentType"] == "HeatExchanger":
             self.instantiated_connections["output"].append(connected_component.name)
             return self.port_names["outport_ventilation"]
 
@@ -502,7 +505,7 @@ class HeatingCoil(MS4VCObject):
         if len(self.instantiated_connections["input"]) >= 2:
             raise Exception("Max input connections (2) for component reached")
 
-        elif "ventilation" in connected_component.FSC_object["SystemType"]:
+        elif "ventilation" in connected_component.FSC_object["SystemType"] or connected_component.FSC_object["ComponentType"] == "HeatExchanger":
             self.instantiated_connections["input"].append(connected_component.name)
             return self.port_names["inport_ventilation"]
             
