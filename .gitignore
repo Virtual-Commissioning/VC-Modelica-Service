@@ -128,3 +128,14 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# Modelica
+.mo
+.mos
+temp
+app/temp
+
+# Workspace
+tests/
+.vscode/
+app/mappers/old_mappers/
