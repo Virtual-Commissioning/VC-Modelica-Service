@@ -210,14 +210,13 @@ class MediumVentilation(Medium):
         super().__init__("MediumVentilation", 1.2, 20, 1.825e-05)
 
 class MS4VCObject:
-    model_template = ""
-    connector_template = ""
+    modelica_name_prefix = "c"
 
     def __init__(self, FSC_object, x_pos, y_pos, name = None):
         self.FSC_object = FSC_object
         if FSC_object != None:
             self.name = FSC_object["Tag"]
-            self.modelica_name = 'c'+self.name
+            self.modelica_name = self.modelica_name_prefix+self.name
         elif name != None:
             self.name = name
             self.modelica_name = name
@@ -307,6 +306,9 @@ class MS4VCObject:
         return length
 
 class Segment(MS4VCObject):
+
+    modelica_name_prefix = "seg"
+
     def __init__(self, FSC_object, x_pos, y_pos):
 
         super().__init__(FSC_object,x_pos, y_pos)
@@ -341,6 +343,9 @@ class Segment(MS4VCObject):
         return length
 
 class Pump(MS4VCObject):
+
+    modelica_name_prefix = "pump"
+
     def __init__(self, FSC_object, x_pos, y_pos):
 
         super().__init__(FSC_object,x_pos, y_pos)
@@ -382,6 +387,9 @@ class Pump(MS4VCObject):
             '''
     
 class Radiator(MS4VCObject):
+
+    modelica_name_prefix = "rad"
+
     def __init__(self, FSC_object, x_pos, y_pos):
 
         super().__init__(FSC_object,x_pos, y_pos)
@@ -409,6 +417,9 @@ class Radiator(MS4VCObject):
             '''
 
 class Bend(MS4VCObject):
+
+    modelica_name_prefix = "bend"
+
     def __init__(self, FSC_object, x_pos, y_pos):
 
         super().__init__(FSC_object,x_pos, y_pos)
@@ -438,6 +449,9 @@ class Bend(MS4VCObject):
             """
 
 class HeatingCoil(MS4VCObject):
+
+    modelica_name_prefix = "heatCoil"
+
     def __init__(self, FSC_object, x_pos, y_pos):
 
         super().__init__(FSC_object,x_pos, y_pos)
@@ -497,6 +511,8 @@ class HeatingCoil(MS4VCObject):
             return self.port_names["inport_water"]
    
 class Tee(MS4VCObject):
+
+    modelica_name_prefix = "tee"
 
     def __init__(self, FSC_object, x_pos, y_pos):
 
@@ -560,6 +576,9 @@ class Tee(MS4VCObject):
             return f"port_{connector_index[0]+1}"
 
 class ValveBalancing(MS4VCObject):
+
+    modelica_name_prefix = "balVal"
+
     def __init__(self, FSC_object, x_pos, y_pos):
 
         super().__init__(FSC_object,x_pos, y_pos)
@@ -579,6 +598,9 @@ class ValveBalancing(MS4VCObject):
         """
 
 class ValveMotorized(MS4VCObject):
+
+    modelica_name_prefix = "motVal"
+
     def __init__(self, FSC_object, x_pos, y_pos):
 
         super().__init__(FSC_object,x_pos, y_pos)
@@ -598,6 +620,9 @@ class ValveMotorized(MS4VCObject):
         """
 
 class ValveCheck(MS4VCObject):
+
+    modelica_name_prefix = "cheVal"
+
     def __init__(self, FSC_object, x_pos, y_pos):
 
         super().__init__(FSC_object,x_pos, y_pos)
@@ -617,6 +642,9 @@ class ValveCheck(MS4VCObject):
         """
 
 class ValveShunt(MS4VCObject):
+
+    modelica_name_prefix = "shunt"
+
     def __init__(self, FSC_object, x_pos, y_pos):
 
         super().__init__(FSC_object,x_pos, y_pos)
@@ -669,6 +697,9 @@ class ValveShunt(MS4VCObject):
             return self.port_names["inport_supply"]
 
 class Reduction(MS4VCObject):
+
+    modelica_name_prefix = "red"
+
     def __init__(self, FSC_object, x_pos, y_pos):
 
         super().__init__(FSC_object,x_pos, y_pos)
@@ -754,6 +785,9 @@ class Outside(MS4VCObject):
         }
     
 class AirTerminal(MS4VCObject):
+
+    modelica_name_prefix = "term"
+
     def __init__(self, FSC_object, x_pos, y_pos):
 
         super().__init__(FSC_object,x_pos, y_pos)
@@ -774,6 +808,9 @@ class AirTerminal(MS4VCObject):
             """
 
 class DamperMotorized(MS4VCObject):
+
+    modelica_name_prefix = "motDamp"
+
     def __init__(self, FSC_object, x_pos, y_pos):
 
         super().__init__(FSC_object,x_pos, y_pos)
@@ -794,6 +831,9 @@ class DamperMotorized(MS4VCObject):
         """
 
 class Fan(MS4VCObject):
+    
+    modelica_name_prefix = "fan"
+
     def __init__(self, FSC_object, x_pos, y_pos):
 
         super().__init__(FSC_object,x_pos, y_pos)
