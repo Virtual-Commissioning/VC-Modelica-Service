@@ -302,7 +302,7 @@ class MS4VCObject:
             port2["Coordinate"]["Y"]
         len_Z = port1["Coordinate"]["Z"] - \
             port2["Coordinate"]["Z"]
-        length = round(math.sqrt(len_X**2+len_Y**2+len_Z**2),2)
+        length = round(math.sqrt(len_X**2+len_Y**2+len_Z**2),4)
         return length
 
 class Segment(MS4VCObject):
@@ -705,14 +705,29 @@ class Reduction(MS4VCObject):
         super().__init__(FSC_object,x_pos, y_pos)
 
     def create_component_string(self):
+        
         length = self.calculate_length_between_ports(self.FSC_object["ConnectedWith"][0],self.FSC_object["ConnectedWith"][1])
     
         diameters = self.calculate_diameters()
-        d1 = max(diameters)
-        d2 = min(diameters)
+
+        directions = [con["ConnectorType"] for con in self.FSC_object["ConnectedWith"]]
         
-        k2 = fluids.fittings.contraction_conical_Crane(d1,d2,length)
+        inlet_diameter = diameters[directions.index("suppliesFluidFrom")]
+        output_diameter = diameters[directions.index("suppliesFluidTo")]
+
         
+        if inlet_diameter>=output_diameter:
+            d1 = max(diameters)
+            d2 = min(diameters)
+            
+            k2 = fluids.fittings.contraction_conical_Crane(d1,d2,length)
+        
+        if inlet_diameter<output_diameter:
+            d1 = min(diameters)
+            d2 = max(diameters)
+            
+            k2 = fluids.fittings.diffuser_conical(d1,d2,length,method="Crane")
+                
         v_nom_flow = [conn["DesignFlow"] for conn in self.FSC_object["ConnectedWith"] if conn != None][0]/1000 # Flow in m3/s
         m_nom_flow = v_nom_flow*self.medium.rho
         
