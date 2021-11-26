@@ -126,6 +126,12 @@ class ModelicaModel:
 
                 self.add_component(obj)
 
+            elif component["ComponentType"] == "MotorizedDamper":
+                
+                obj = DamperMotorized(component, x_pos, y_pos)
+
+                self.add_component(obj)
+
             else:
 
                 obj = MS4VCObject(component, x_pos, y_pos)
@@ -760,3 +766,23 @@ class AirTerminal(MS4VCObject):
             dp_nominal={round(dp_nom, 2)})
             annotation (Placement(transformation(extent={{{{{0+self.x_pos*30},{0+self.y_pos*30}}},{{{20+self.x_pos*30},{20+self.y_pos*30}}}}})));
             """
+
+class DamperMotorized(MS4VCObject):
+    def __init__(self, FSC_object, x_pos, y_pos):
+
+        super().__init__(FSC_object,x_pos, y_pos)
+
+    def create_component_string(self):
+
+        nom_flow = [conn["DesignFlow"] for conn in self.FSC_object["ConnectedWith"] if conn != None][0]/1000 # m3/s
+        m_nom_flow = nom_flow*self.medium.rho # kg/s
+
+        dp_nom = (nom_flow*1000/self.FSC_object["Kvs"])**2 # Pa
+
+        self.component_string = f"""
+        Buildings.Fluid.Actuators.Dampers.Exponential {self.modelica_name}(
+            redeclare package Medium = {self.medium.name}, 
+            m_flow_nominal= {round(m_nom_flow,6)},
+            dpDamper_nominal={round(dp_nom, 2)}))
+            annotation (Placement(transformation(extent={{{{{0+self.x_pos*30},{0+self.y_pos*30}}},{{{20+self.x_pos*30},{20+self.y_pos*30}}}}})));
+        """
