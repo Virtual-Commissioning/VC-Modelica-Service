@@ -120,6 +120,12 @@ class ModelicaModel:
 
                 self.add_component(obj)
                 
+            elif component["ComponentType"] == "AirTerminal":
+                
+                obj = AirTerminal(component, x_pos, y_pos)
+
+                self.add_component(obj)
+
             else:
 
                 obj = MS4VCObject(component, x_pos, y_pos)
@@ -254,9 +260,6 @@ class MS4VCObject:
             return self.port_names["inport"]
         else:
             raise Exception("Max input connections for component reached")
-   
-    def connect_component(self):
-        pass
 
     def calculate_diameters(self):
         """
@@ -306,7 +309,7 @@ class Segment(MS4VCObject):
         Buildings.Fluid.FixedResistances.Pipe {self.modelica_name}(
             redeclare package Medium = {self.medium.name},
             allowFlowReversal=true,
-            m_flow_nominal={m_nom_flow},
+            m_flow_nominal={round(m_nom_flow,6)},
             thicknessIns={None},
             lambdaIns={None},
             diameter={dimension},
@@ -401,9 +404,9 @@ class Bend(MS4VCObject):
     def create_component_string(self):
         d = self.calculate_diameters()[0]
         a = (d/2)**2*math.pi
-        v_flow = [conn["DesignFlow"] for conn in self.FSC_object["ConnectedWith"] if conn != None][0]/1000 # Flow in m3/s
-        m_flow = v_flow*self.medium.rho
-        v = v_flow/a
+        v_nom_flow = [conn["DesignFlow"] for conn in self.FSC_object["ConnectedWith"] if conn != None][0]/1000 # Flow in m3/s
+        m_nom_flow = v_nom_flow*self.medium.rho
+        v = v_nom_flow/a
         
         if "Radius" not in self.FSC_object.keys():
             rc = d
@@ -417,7 +420,7 @@ class Bend(MS4VCObject):
         self.component_string = f"""
         Buildings.Fluid.FixedResistances.PressureDrop {self.modelica_name}(
             redeclare package Medium = {self.medium.name},
-            m_flow_nominal={m_flow},
+            m_flow_nominal={round(m_nom_flow,6)},
             dp_nominal={dp_nominal})
             annotation (Placement(transformation(extent={{{{{0+self.x_pos*30},{0+self.y_pos*30}}},{{{20+self.x_pos*30},{20+self.y_pos*30}}}}})));
             """
@@ -492,14 +495,14 @@ class Tee(MS4VCObject):
         port_flows = []
         for port in ports:
             if port["ConnectorType"] == "suppliesFluidTo":
-                nom_flow = -port["DesignFlow"]
-                m_nom_flow = nom_flow*self.medium.rho
+                v_nom_flow = -port["DesignFlow"]
+                m_nom_flow = round(v_nom_flow*self.medium.rho,6)
 
                 port_flows.append(m_nom_flow)
             
             else:
-                nom_flow = port["DesignFlow"]
-                m_nom_flow = nom_flow*self.medium.rho
+                v_nom_flow = port["DesignFlow"]
+                m_nom_flow = round(v_nom_flow*self.medium.rho,6)
 
                 port_flows.append(m_nom_flow)
             
@@ -550,10 +553,14 @@ class ValveBalancing(MS4VCObject):
         super().__init__(FSC_object,x_pos, y_pos)
 
     def create_component_string(self):
+
+        nom_flow = [conn["DesignFlow"] for conn in self.FSC_object["ConnectedWith"] if conn != None][0]/1000 # m3/s
+        m_nom_flow = nom_flow*self.medium.rho # kg/s
+
         self.component_string = f"""
         Buildings.Fluid.Actuators.Valves.TwoWayLinear {self.modelica_name}(
             redeclare package Medium = {self.medium.name}, 
-            m_flow_nominal= {[conn["DesignFlow"] for conn in self.FSC_object["ConnectedWith"] if conn != None][0]},
+            m_flow_nominal= {round(m_nom_flow)},
             CvData=Buildings.Fluid.Types.CvTypes.Kv,
             Kv={self.FSC_object["Kv"]})
             annotation (Placement(transformation(extent={{{{{0+self.x_pos*30},{0+self.y_pos*30}}},{{{20+self.x_pos*30},{20+self.y_pos*30}}}}})));
@@ -572,7 +579,7 @@ class ValveMotorized(MS4VCObject):
         self.component_string = f"""
         Buildings.Fluid.Actuators.Valves.TwoWayEqualPercentage {self.modelica_name}(
             redeclare package Medium = {self.medium.name}, 
-            m_flow_nominal= {m_nom_flow},
+            m_flow_nominal= {round(m_nom_flow,6)},
             CvData=Buildings.Fluid.Types.CvTypes.Kv,
             Kv={self.FSC_object["Kvs"]})
             annotation (Placement(transformation(extent={{{{{0+self.x_pos*30},{0+self.y_pos*30}}},{{{20+self.x_pos*30},{20+self.y_pos*30}}}}})));
@@ -590,7 +597,7 @@ class ValveCheck(MS4VCObject):
 
         self.component_string = f"""
         Buildings.Fluid.FixedResistances.CheckValve {self.modelica_name}(
-            m_flow_nominal={m_nom_flow},
+            m_flow_nominal={round(m_nom_flow,6)},
             CvData=Buildings.Fluid.Types.CvTypes.Kv,
             Kv={self.FSC_object["Kvs"]},
             redeclare package Medium = {self.medium})
@@ -611,7 +618,7 @@ class ValveShunt(MS4VCObject):
 
         self.component_string = f"""
         ToolchainLib.Shunt {self.modelica_name}(res(
-            m_flow_nominal={m_nom_flow},
+            m_flow_nominal={round(m_nom_flow,6)},
             dh={self.FSC_object["ShuntDiameter"]},
             length={width}))
             annotation (Placement(transformation(extent={{{{{0+self.x_pos*30},{0+self.y_pos*30}}},{{{20+self.x_pos*30},{20+self.y_pos*30}}}}})));
@@ -663,17 +670,17 @@ class Reduction(MS4VCObject):
         
         k2 = fluids.fittings.contraction_conical_Crane(d1,d2,length)
         
-        v_flow = [conn["DesignFlow"] for conn in self.FSC_object["ConnectedWith"] if conn != None][0]/1000 # Flow in m3/s
-        m_flow = v_flow*self.medium.rho
+        v_nom_flow = [conn["DesignFlow"] for conn in self.FSC_object["ConnectedWith"] if conn != None][0]/1000 # Flow in m3/s
+        m_nom_flow = v_nom_flow*self.medium.rho
         
-        v2 = v_flow/((d2/2)**2*math.pi)
+        v2 = v_nom_flow/((d2/2)**2*math.pi)
         
         dp_nominal = round(k2*1/2*1000*v2**2,4)
 
         self.component_string = f"""
         Buildings.Fluid.FixedResistances.PressureDrop {self.modelica_name}(
             redeclare package Medium = {self.medium.name},
-            m_flow_nominal={m_flow},
+            m_flow_nominal={round(m_nom_flow,6)},
             dp_nominal={dp_nominal})
             annotation (Placement(transformation(extent={{{{{0+self.x_pos*30},{0+self.y_pos*30}}},{{{20+self.x_pos*30},{20+self.y_pos*30}}}}})));
             """
@@ -729,11 +736,27 @@ class Outside(MS4VCObject):
         """
 
     def create_port_names(self):
-        '''
-        Default port names for Modelica classes with only two ports
-        '''
         self.port_names = {
             "inport": "ports[2]",
             "outport": "ports[1]"
         }
     
+class AirTerminal(MS4VCObject):
+    def __init__(self, FSC_object, x_pos, y_pos):
+
+        super().__init__(FSC_object,x_pos, y_pos)
+
+    def create_component_string(self):
+
+        nom_flow = [conn["DesignFlow"] for conn in self.FSC_object["ConnectedWith"] if conn != None][0]/1000 # m3/s
+        m_nom_flow = nom_flow*self.medium.rho # kg/s
+
+        dp_nom = (nom_flow*1000/self.FSC_object["Kv"])**2 # Pa
+
+        self.component_string = f"""
+        Buildings.Fluid.FixedResistances.PressureDrop {self.modelica_name}(
+            redeclare package Medium = {self.medium.name},
+            m_flow_nominal={round(m_nom_flow,6)},
+            dp_nominal={round(dp_nom, 2)})
+            annotation (Placement(transformation(extent={{{{{0+self.x_pos*30},{0+self.y_pos*30}}},{{{20+self.x_pos*30},{20+self.y_pos*30}}}}})));
+            """
