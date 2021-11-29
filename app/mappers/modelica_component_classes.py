@@ -862,6 +862,10 @@ class Outside(MS4VCObject):
         
         Buildings.BoundaryConditions.WeatherData.Bus weaBus
             annotation (Placement(transformation(extent={{{{{0+self.x_pos*30},{0+(self.y_pos+1)*30}}},{{{20+self.x_pos*30},{20+(self.y_pos+1)*30}}}}})));
+        
+        Buildings.BoundaryConditions.WeatherData.ReaderTMY3 weaDat(filNam=
+            Modelica.Utilities.Files.loadResource("modelica://Buildings/Resources/weatherdata/USA_IL_Chicago-OHare.Intl.AP.725300_TMY3.mos"))
+            annotation (Placement(transformation(extent={{{{{0+self.x_pos*30},{0+(self.y_pos+2)*30}}},{{{20+self.x_pos*30},{20+(self.y_pos+2)*30}}}}})));
         """
 
     def create_port_names(self):
@@ -874,7 +878,10 @@ class Outside(MS4VCObject):
         connection_string = f'''
         connect({self.modelica_name}.weaBus,weaBus) annotation (Line(points={{{{-46,16}},{{-28,
             16}}}}, color={{255,204,51}}, thickness=0.5));
-            '''
+        
+        connect(weaDat.weaBus,weaBus) annotation (Line(points={{{{-46,16}},{{-28,
+            16}}}}, color={{255,204,51}}, thickness=0.5));
+        '''
         return connection_string
 
 class AirTerminal(MS4VCObject):
