@@ -7,7 +7,9 @@ class ModelicaModel:
         self.package_name = package_name
         self.model_name = model_name
         self.components = {}
+        self.rooms = {}
         self.component_string = ""
+        self.room_string = ""
         self.connection_string = '''\n\tequation\n'''
         self.days = 1
     
@@ -43,8 +45,10 @@ class ModelicaModel:
         self.end_model(self.days)
         for component in self.components.values():
             self.component_string += component.component_string
+        for room in self.rooms.values():
+            self.room_string += room.component_string
         self.connect_all_components()
-        self.model_string = self.start_string + self.component_string + self.connection_string + self.end_string
+        self.model_string = self.start_string + self.component_string + self.room_string + self.connection_string + self.end_string
         self.create_modelica_package()
 
     def map_components(self, system):
@@ -192,6 +196,20 @@ class ModelicaModel:
             for input_tag in input_tags:
                 self.connect(component, self.components[input_tag])
 
+    def add_rooms(self, room_list):
+
+        counter = 3 # Counter for distribution of components
+        gridwidth = 3 # Width of the visual distribution of the components
+        
+        for room in room_list:
+            
+            x_pos = counter % gridwidth
+            y_pos = - int((counter - x_pos)/gridwidth)
+            new_room = Room(room, x_pos, y_pos)
+
+            self.rooms[new_room.name] = new_room
+            counter += 1
+
 class Medium():
     def __init__(self, name, rho, temp, viscosity):
         self.name = name
@@ -326,8 +344,6 @@ class Segment(MS4VCObject):
             redeclare package Medium = {self.medium.name},
             allowFlowReversal=true,
             m_flow_nominal={round(m_nom_flow,6)},
-            thicknessIns={None},
-            lambdaIns={None},
             diameter={dimension},
             nSeg=2,
             length={length}) 
@@ -865,3 +881,47 @@ class Fan(MS4VCObject):
             power(V_flow={{{', '.join(map(str,list(self.FSC_object["PowerCurve"].keys())))}}}, P={{{', '.join(map(str,list(self.FSC_object["PowerCurve"].values())))}}})))
             annotation (Placement(transformation(extent={{{{{0+self.x_pos*30},{0+self.y_pos*30}}},{{{20+self.x_pos*30},{20+self.y_pos*30}}}}})));
             '''
+
+class Room(MS4VCObject):
+    
+    modelica_name_prefix = "room"
+
+    def __init__(self, FSC_object, x_pos, y_pos):
+        super().__init__(FSC_object, x_pos, y_pos)
+
+        self.instantiated_connections = {
+            "input": [],
+            "output": [],
+            "heat": []
+        }
+    
+    def find_medium(self):
+        self.medium = MediumVentilation()
+
+    def create_component_string(self):
+        self.component_string = f"""
+        ToolchainLib.RoomDetached {self.modelica_name}(redeclare package MediumA = 
+            {MediumVentilation().name})
+            annotation (Placement(transformation(extent={{{{{0+self.x_pos*30},{0+self.y_pos*30}}},{{{20+self.x_pos*30},{20+self.y_pos*30}}}}})));
+        """
+
+    def create_port_names(self):
+        self.port_names = {
+            "fluid_ports": "ports[x]",
+            "heat_port": "heaPorAir",
+            "weather": "weaBus"
+        }
+
+    def get_output_port(self, connected_component):
+        port_number = len(self.instantiated_connections["output"]) + len(self.instantiated_connections["input"])
+        self.instantiated_connections["output"].append(connected_component.name)
+        return f"ports[{port_number}]"
+        
+    def get_input_port(self, connected_component):
+        port_number = len(self.instantiated_connections["output"]) + len(self.instantiated_connections["input"])
+        self.instantiated_connections["input"].append(connected_component.name)
+        return f"ports[{port_number}]"
+
+    def get_heat_port(self, connected_component):
+        self.instantiated_connections["heat"].append(connected_component.name)
+        return self.port_names["heat_port"]
