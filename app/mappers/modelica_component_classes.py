@@ -57,6 +57,7 @@ class ModelicaModel:
         
         ## Special objects:
         self.add_component(Outside(-1, 0, "outside"))
+        self.connection_string += self.components["outside"].connect_to_weaBus()
         self.add_component(Plant(-2, 0, "coolingPlant", 0.1, MediumCooling(),5))
         self.add_component(Plant(-3, 0, "heatingPlant", 0.5, MediumHeating(),70))
         
@@ -212,24 +213,33 @@ class ModelicaModel:
             new_room = Room(room, x_pos, y_pos)
 
             self.rooms[new_room.name] = new_room
+            self.connection_string += self.rooms[new_room.name].connect_to_weaBus()
             counter += 1
 
     def connect_to_room(self, component, room):
         if component.FSC_object["ComponentType"] == "Radiator":
             room_port = room.get_heat_port(component)
             component_port = component.get_heat_port(room)
+            color = "191,0,0"
+
         elif component.FSC_object["ComponentType"] == "AirTerminal":
             if "fraluft" in component.FSC_object["SystemName"]:
                 room_port = room.get_output_port(component)
                 component_port = component.get_input_port(room)
-            if "tilluft" in component.FSC_object["SystemName"]:
+            elif "tilluft" in component.FSC_object["SystemName"]:
                 room_port = room.get_input_port(component)
                 component_port = component.get_output_port(room)
+            else:
+                raise Exception("Unknown direction of air terminal (supply or return?)")
+            
+            color = "0,127,255"
+        
         else:
             return
+        
         self.connection_string += f'''
         connect({component.modelica_name}.{component_port},{room.modelica_name}.{room_port}) annotation (Line(points={{{{-46,16}},{{-28,
-            16}}}}, color={{0,127,255}}));
+            16}}}}, color={{{color}}}));
             '''
 
 class Medium():
@@ -845,10 +855,13 @@ class Outside(MS4VCObject):
     def create_component_string(self):
         self.component_string = f"""
         Buildings.Fluid.Sources.Outside {self.modelica_name}(
-            redeclare package Medium = Buildings.Media.Air,
+            redeclare package Medium = {MediumVentilation().name},
             use_C_in=false,
             nPorts=2) "Outside air conditions"
             annotation (Placement(transformation(extent={{{{{0+self.x_pos*30},{0+self.y_pos*30}}},{{{20+self.x_pos*30},{20+self.y_pos*30}}}}})));
+        
+        Buildings.BoundaryConditions.WeatherData.Bus weaBus
+            annotation (Placement(transformation(extent={{{{{0+self.x_pos*30},{0+(self.y_pos+1)*30}}},{{{20+self.x_pos*30},{20+(self.y_pos+1)*30}}}}})));
         """
 
     def create_port_names(self):
@@ -857,6 +870,13 @@ class Outside(MS4VCObject):
             "outport": "ports[1]"
         }
     
+    def connect_to_weaBus(self):
+        connection_string = f'''
+        connect({self.modelica_name}.weaBus,weaBus) annotation (Line(points={{{{-46,16}},{{-28,
+            16}}}}, color={{255,204,51}}, thickness=0.5));
+            '''
+        return connection_string
+
 class AirTerminal(MS4VCObject):
 
     modelica_name_prefix = "term"
@@ -964,3 +984,10 @@ class Room(MS4VCObject):
     def get_heat_port(self, connected_component):
         self.instantiated_connections["heat"].append(connected_component.name)
         return self.port_names["heat_port"]
+
+    def connect_to_weaBus(self):
+        connection_string = f'''
+        connect({self.modelica_name}.weaBus,weaBus) annotation (Line(points={{{{-46,16}},{{-28,
+            16}}}}, color={{255,204,51}}, thickness=0.5));
+            '''
+        return connection_string
