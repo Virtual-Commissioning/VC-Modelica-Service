@@ -196,6 +196,10 @@ class ModelicaModel:
             for input_tag in input_tags:
                 self.connect(component, self.components[input_tag])
 
+            if len(component.FSC_object["ContainedInSpaces"]) > 0:
+                room_tag = component.FSC_object["ContainedInSpaces"][0]
+                self.connect_to_room(component, self.rooms[room_tag])
+    
     def add_rooms(self, room_list):
 
         counter = 3 # Counter for distribution of components
@@ -209,6 +213,24 @@ class ModelicaModel:
 
             self.rooms[new_room.name] = new_room
             counter += 1
+
+    def connect_to_room(self, component, room):
+        if component.FSC_object["ComponentType"] == "Radiator":
+            room_port = room.get_heat_port(component)
+            component_port = component.get_heat_port(room)
+        elif component.FSC_object["ComponentType"] == "AirTerminal":
+            if "fraluft" in component.FSC_object["SystemName"]:
+                room_port = room.get_output_port(component)
+                component_port = component.get_input_port(room)
+            if "tilluft" in component.FSC_object["SystemName"]:
+                room_port = room.get_input_port(component)
+                component_port = component.get_output_port(room)
+        else:
+            return
+        self.connection_string += f'''
+        connect({component.modelica_name}.{component_port},{room.modelica_name}.{room_port}) annotation (Line(points={{{{-46,16}},{{-28,
+            16}}}}, color={{0,127,255}}));
+            '''
 
 class Medium():
     def __init__(self, name, rho, temp, viscosity):
@@ -412,6 +434,12 @@ class Radiator(MS4VCObject):
 
         super().__init__(FSC_object,x_pos, y_pos)
 
+        self.instantiated_connections = {
+            "input": [],
+            "output": [],
+            "heat": []
+        }
+
     def create_component_string(self):
         self.component_string = f'''
             ToolchainLib.Radiator {self.modelica_name}(
@@ -433,6 +461,17 @@ class Radiator(MS4VCObject):
             self.component_string += f''')
                 annotation (Placement(transformation(extent={{{{{0+self.x_pos*30},{0+self.y_pos*30}}},{{{20+self.x_pos*30},{20+self.y_pos*30}}}}})));
             '''
+
+    def create_port_names(self):
+        self.port_names = {
+            "inport": "port_a",
+            "outport": "port_b",
+            "heat_port": "heaPor"
+        }
+
+    def get_heat_port(self, connected_component):
+        self.instantiated_connections["heat"].append(connected_component.name)
+        return self.port_names["heat_port"]
 
 class Bend(MS4VCObject):
 
