@@ -30,14 +30,15 @@ def create_modelica_model():
     data_parsed = json.loads(data)
     wanted_systems = data_parsed["systems"]
     system = modelica_simulation_service.extract_components_from_data(data_parsed, wanted_systems) # Extract system from data
-    
+    rooms = data_parsed["spaces"]["SpacesInModel"]
+
     # Needs info on package/model name and simulation parameters (days)
     package_name = "Auto_Generated"
     model_name = "Model"
     days = 1
 
     # modelica_package = create_modelica_package(package_name)
-    modelica_model, modelica_package = map_to_modelica_model(system,days,package_name,model_name)
+    modelica_model, modelica_package = map_to_modelica_model(system,rooms,days,package_name,model_name)
 
     pa_path = f"temp\\{package_name}"
     if not os.path.exists(pa_path):

@@ -7,7 +7,9 @@ class ModelicaModel:
         self.package_name = package_name
         self.model_name = model_name
         self.components = {}
+        self.rooms = {}
         self.component_string = ""
+        self.room_string = ""
         self.connection_string = '''\n\tequation\n'''
         self.days = 1
     
@@ -43,8 +45,10 @@ class ModelicaModel:
         self.end_model(self.days)
         for component in self.components.values():
             self.component_string += component.component_string
+        for room in self.rooms.values():
+            self.room_string += room.component_string
         self.connect_all_components()
-        self.model_string = self.start_string + self.component_string + self.connection_string + self.end_string
+        self.model_string = self.start_string + self.component_string + self.room_string + self.connection_string + self.end_string
         self.create_modelica_package()
 
     def map_components(self, system):
@@ -53,6 +57,7 @@ class ModelicaModel:
         
         ## Special objects:
         self.add_component(Outside(-1, 0, "outside"))
+        self.connection_string += self.components["outside"].connect_to_weaBus()
         self.add_component(Plant(-2, 0, "coolingPlant", 0.1, MediumCooling(),5))
         self.add_component(Plant(-3, 0, "heatingPlant", 0.5, MediumHeating(),70))
         
@@ -192,6 +197,25 @@ class ModelicaModel:
             for input_tag in input_tags:
                 self.connect(component, self.components[input_tag])
 
+            if len(component.FSC_object["ContainedInSpaces"]) > 0:
+                room_tag = component.FSC_object["ContainedInSpaces"][0]
+                self.connection_string += component.connect_to_room(self.rooms[room_tag])
+    
+    def add_rooms(self, room_list):
+
+        counter = 3 # Counter for distribution of components
+        gridwidth = 3 # Width of the visual distribution of the components
+        
+        for room in room_list:
+            
+            x_pos = counter % gridwidth
+            y_pos = - int((counter - x_pos)/gridwidth)
+            new_room = Room(room, x_pos, y_pos)
+
+            self.rooms[new_room.name] = new_room
+            self.connection_string += self.rooms[new_room.name].connect_to_weaBus()
+            counter += 1
+
 class Medium():
     def __init__(self, name, rho, temp, viscosity):
         self.name = name
@@ -307,6 +331,12 @@ class MS4VCObject:
         length = round(math.sqrt(len_X**2+len_Y**2+len_Z**2),4)
         return length
 
+    def connect_to_room(self, room):
+        '''
+        Function to combine component with a room. Default is to return an empty string.
+        '''
+        return ""
+
 class Segment(MS4VCObject):
 
     modelica_name_prefix = "seg"
@@ -326,8 +356,6 @@ class Segment(MS4VCObject):
             redeclare package Medium = {self.medium.name},
             allowFlowReversal=true,
             m_flow_nominal={round(m_nom_flow,6)},
-            thicknessIns={None},
-            lambdaIns={None},
             diameter={dimension},
             nSeg=2,
             length={length}) 
@@ -396,6 +424,12 @@ class Radiator(MS4VCObject):
 
         super().__init__(FSC_object,x_pos, y_pos)
 
+        self.instantiated_connections = {
+            "input": [],
+            "output": [],
+            "heat": []
+        }
+
     def create_component_string(self):
         self.component_string = f'''
             ToolchainLib.Radiator {self.modelica_name}(
@@ -417,6 +451,29 @@ class Radiator(MS4VCObject):
             self.component_string += f''')
                 annotation (Placement(transformation(extent={{{{{0+self.x_pos*30},{0+self.y_pos*30}}},{{{20+self.x_pos*30},{20+self.y_pos*30}}}}})));
             '''
+
+    def create_port_names(self):
+        self.port_names = {
+            "inport": "port_a",
+            "outport": "port_b",
+            "heat_port": "heaPor"
+        }
+
+    def get_heat_port(self, connected_component):
+        self.instantiated_connections["heat"].append(connected_component.name)
+        return self.port_names["heat_port"]
+    
+    def connect_to_room(self, room):
+        room_port = room.get_heat_port(self)
+        component_port = self.get_heat_port(room)
+        color = "191,0,0"
+
+        connection_string = f'''
+        connect({self.modelica_name}.{component_port},{room.modelica_name}.{room_port}) annotation (Line(points={{{{-46,16}},{{-28,
+            16}}}}, color={{{color}}}));
+            '''
+
+        return connection_string
 
 class Bend(MS4VCObject):
 
@@ -790,10 +847,17 @@ class Outside(MS4VCObject):
     def create_component_string(self):
         self.component_string = f"""
         Buildings.Fluid.Sources.Outside {self.modelica_name}(
-            redeclare package Medium = Buildings.Media.Air,
+            redeclare package Medium = {MediumVentilation().name},
             use_C_in=false,
             nPorts=2) "Outside air conditions"
             annotation (Placement(transformation(extent={{{{{0+self.x_pos*30},{0+self.y_pos*30}}},{{{20+self.x_pos*30},{20+self.y_pos*30}}}}})));
+        
+        Buildings.BoundaryConditions.WeatherData.Bus weaBus
+            annotation (Placement(transformation(extent={{{{{0+self.x_pos*30},{0+(self.y_pos+1)*30}}},{{{20+self.x_pos*30},{20+(self.y_pos+1)*30}}}}})));
+        
+        Buildings.BoundaryConditions.WeatherData.ReaderTMY3 weaDat(filNam=
+            Modelica.Utilities.Files.loadResource("modelica://Buildings/Resources/weatherdata/USA_IL_Chicago-OHare.Intl.AP.725300_TMY3.mos"))
+            annotation (Placement(transformation(extent={{{{{0+self.x_pos*30},{0+(self.y_pos+2)*30}}},{{{20+self.x_pos*30},{20+(self.y_pos+2)*30}}}}})));
         """
 
     def create_port_names(self):
@@ -802,6 +866,16 @@ class Outside(MS4VCObject):
             "outport": "ports[1]"
         }
     
+    def connect_to_weaBus(self):
+        connection_string = f'''
+        connect({self.modelica_name}.weaBus,weaBus) annotation (Line(points={{{{-46,16}},{{-28,
+            16}}}}, color={{255,204,51}}, thickness=0.5));
+        
+        connect(weaDat.weaBus,weaBus) annotation (Line(points={{{{-46,16}},{{-28,
+            16}}}}, color={{255,204,51}}, thickness=0.5));
+        '''
+        return connection_string
+
 class AirTerminal(MS4VCObject):
 
     modelica_name_prefix = "term"
@@ -824,6 +898,25 @@ class AirTerminal(MS4VCObject):
             dp_nominal={round(dp_nom, 2)})
             annotation (Placement(transformation(extent={{{{{0+self.x_pos*30},{0+self.y_pos*30}}},{{{20+self.x_pos*30},{20+self.y_pos*30}}}}})));
             """
+    
+    def connect_to_room(self, room):
+        if "fraluft" in self.FSC_object["SystemName"]:
+            room_port = room.get_output_port(self)
+            component_port = self.get_input_port(room)
+        elif "tilluft" in self.FSC_object["SystemName"]:
+            room_port = room.get_input_port(self)
+            component_port = self.get_output_port(room)
+        else:
+            raise Exception("Unknown direction of air terminal (supply or return?)")
+        
+        color = "0,127,255"
+
+        connection_string = f'''
+        connect({self.modelica_name}.{component_port},{room.modelica_name}.{room_port}) annotation (Line(points={{{{-46,16}},{{-28,
+            16}}}}, color={{{color}}}));
+            '''
+
+        return connection_string
 
 class DamperMotorized(MS4VCObject):
 
@@ -865,3 +958,54 @@ class Fan(MS4VCObject):
             power(V_flow={{{', '.join(map(str,list(self.FSC_object["PowerCurve"].keys())))}}}, P={{{', '.join(map(str,list(self.FSC_object["PowerCurve"].values())))}}})))
             annotation (Placement(transformation(extent={{{{{0+self.x_pos*30},{0+self.y_pos*30}}},{{{20+self.x_pos*30},{20+self.y_pos*30}}}}})));
             '''
+
+class Room(MS4VCObject):
+    
+    modelica_name_prefix = "room"
+
+    def __init__(self, FSC_object, x_pos, y_pos):
+        super().__init__(FSC_object, x_pos, y_pos)
+
+        self.instantiated_connections = {
+            "input": [],
+            "output": [],
+            "heat": []
+        }
+    
+    def find_medium(self):
+        self.medium = MediumVentilation()
+
+    def create_component_string(self):
+        self.component_string = f"""
+        ToolchainLib.RoomDetached {self.modelica_name}(redeclare package MediumA = 
+            {MediumVentilation().name})
+            annotation (Placement(transformation(extent={{{{{0+self.x_pos*30},{0+self.y_pos*30}}},{{{20+self.x_pos*30},{20+self.y_pos*30}}}}})));
+        """
+
+    def create_port_names(self):
+        self.port_names = {
+            "fluid_ports": "ports[x]",
+            "heat_port": "heaPorAir",
+            "weather": "weaBus"
+        }
+
+    def get_output_port(self, connected_component):
+        port_number = len(self.instantiated_connections["output"]) + len(self.instantiated_connections["input"])
+        self.instantiated_connections["output"].append(connected_component.name)
+        return f"ports[{port_number}]"
+        
+    def get_input_port(self, connected_component):
+        port_number = len(self.instantiated_connections["output"]) + len(self.instantiated_connections["input"])
+        self.instantiated_connections["input"].append(connected_component.name)
+        return f"ports[{port_number}]"
+
+    def get_heat_port(self, connected_component):
+        self.instantiated_connections["heat"].append(connected_component.name)
+        return self.port_names["heat_port"]
+
+    def connect_to_weaBus(self):
+        connection_string = f'''
+        connect({self.modelica_name}.weaBus,weaBus) annotation (Line(points={{{{-46,16}},{{-28,
+            16}}}}, color={{255,204,51}}, thickness=0.5));
+            '''
+        return connection_string
