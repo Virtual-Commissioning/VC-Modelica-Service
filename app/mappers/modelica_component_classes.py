@@ -145,6 +145,22 @@ class ModelicaModel:
 
                 self.add_component(obj)
 
+            elif component["ComponentType"] == "PressureSensor":
+
+                obj = PressureSensor(component, x_pos, y_pos)
+                
+                obj.connect_to_outside(self.components["outside"])
+
+                self.add_component(obj)
+
+                self.connection_string += obj.connection_string
+
+            elif component["ComponentType"] == "TemperatureSensor":
+
+                obj = TemperatureSensor(component, x_pos, y_pos)
+
+                self.add_component(obj)
+
             else:
 
                 obj = MS4VCObject(component, x_pos, y_pos)
@@ -834,7 +850,7 @@ class Plant(MS4VCObject):
         """
 
 class Outside(MS4VCObject):
-    def __init__(self, x_pos, y_pos, name):
+    def __init__(self, x_pos, y_pos, name = "outside"):
 
         super().__init__(None, x_pos, y_pos, name)
     
@@ -849,7 +865,7 @@ class Outside(MS4VCObject):
         Buildings.Fluid.Sources.Outside {self.modelica_name}(
             redeclare package Medium = {MediumVentilation().name},
             use_C_in=false,
-            nPorts=2) "Outside air conditions"
+            nPorts=3) "Outside air conditions"
             annotation (Placement(transformation(extent={{{{{0+self.x_pos*30},{0+self.y_pos*30}}},{{{20+self.x_pos*30},{20+self.y_pos*30}}}}})));
         
         Buildings.BoundaryConditions.WeatherData.Bus weaBus
@@ -862,6 +878,7 @@ class Outside(MS4VCObject):
 
     def create_port_names(self):
         self.port_names = {
+            "pressure_port": "ports[3]",
             "inport": "ports[2]",
             "outport": "ports[1]"
         }
@@ -1008,3 +1025,57 @@ class Room(MS4VCObject):
             16}}}}, color={{255,204,51}}, thickness=0.5));
             '''
         return connection_string
+
+class PressureSensor(MS4VCObject):
+
+    modelica_name_prefix = "senPre"
+
+    def __init__(self, FSC_object, x_pos, y_pos):
+
+        super().__init__(FSC_object, x_pos, y_pos)
+
+    def create_component_string(self):
+        self.component_string = f'''
+        ToolchainLib.PressureSensor {self.modelica_name}(redeclare package MediumA = 
+            {self.medium.name})
+            annotation (Placement(transformation(extent={{{{{0+self.x_pos*30},{0+self.y_pos*30}}},{{{20+self.x_pos*30},{20+self.y_pos*30}}}}})));
+            '''
+
+    def create_port_names(self):
+        self.port_names = {
+            "inport": "port_a",
+            "outport": "port_b",
+            "room_port": "port_outside",
+            "result_port": "statPres"
+        }
+
+    def connect_to_outside(self, outside):
+        self.connection_string = f'''
+        connect({self.modelica_name}.{self.port_names["room_port"]},{outside.name}.{outside.port_names["pressure_port"]}) annotation (Line(points={{{{-46,16}},{{-28,
+            16}}}}, color={{0,127,255}}));'''
+    
+class TemperatureSensor(MS4VCObject):
+
+    modelica_name_prefix = "senTem"
+
+    def __init__(self, FSC_object, x_pos, y_pos):
+
+        super().__init__(FSC_object, x_pos, y_pos)
+
+    def create_component_string(self):
+        
+        nom_flow = [conn["DesignFlow"] for conn in self.FSC_object["ConnectedWith"] if conn != None][0]/1000 # m3/s
+        m_nom_flow = nom_flow*self.medium.rho # kg/s
+
+        self.component_string = f'''
+        Buildings.Fluid.Sensors.TemperatureTwoPort {self.modelica_name}(redeclare package Medium = 
+            {self.medium.name}, m_flow_nominal={round(m_nom_flow,6)})
+            annotation (Placement(transformation(extent={{{{{0+self.x_pos*30},{0+self.y_pos*30}}},{{{20+self.x_pos*30},{20+self.y_pos*30}}}}})));
+            '''
+
+    def create_port_names(self):
+        self.port_names = {
+            "inport": "port_a",
+            "outport": "port_b",
+            "result_port": "T"
+        }
