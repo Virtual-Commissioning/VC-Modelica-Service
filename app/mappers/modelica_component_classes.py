@@ -24,7 +24,7 @@ class ModelicaModel:
             __Dymola_choicesAllMatching=true);
         package MediumCooling = Buildings.Media.Water(T_default=273.15+5) annotation (
             __Dymola_choicesAllMatching=true);
-        package MediumVentilation = Buildings.Media.Air annotation (
+        package MediumVentilation = Buildings.Media.Air(extraPropertiesNames={{"CO2"}}) annotation (
             __Dymola_choicesAllMatching=true);
         '''
     
@@ -984,20 +984,19 @@ class Room(MS4VCObject):
 
     def create_port_names(self):
         self.port_names = {
-            "fluid_ports": "ports[x]",
+            "inport": "airPorIn",
+            "outport": "airPorOut",
             "heat_port": "heaPorAir",
             "weather": "weaBus"
         }
 
     def get_output_port(self, connected_component):
-        port_number = len(self.instantiated_connections["output"]) + len(self.instantiated_connections["input"])
         self.instantiated_connections["output"].append(connected_component.name)
-        return f"ports[{port_number}]"
+        return self.port_names["outport"]
         
     def get_input_port(self, connected_component):
-        port_number = len(self.instantiated_connections["output"]) + len(self.instantiated_connections["input"])
         self.instantiated_connections["input"].append(connected_component.name)
-        return f"ports[{port_number}]"
+        return self.port_names["inport"]
 
     def get_heat_port(self, connected_component):
         self.instantiated_connections["heat"].append(connected_component.name)
