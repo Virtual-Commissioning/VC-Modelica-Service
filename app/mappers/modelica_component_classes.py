@@ -69,81 +69,59 @@ class ModelicaModel:
 
                 obj = Segment(component, x_pos, y_pos)
 
-                self.add_component(obj)
-
             elif component["ComponentType"] == "Pump":
 
                 obj = Pump(component, x_pos, y_pos)
-
-                self.add_component(obj)
                 
             elif component["ComponentType"] == "Radiator":
 
                 obj = Radiator(component, x_pos, y_pos)
-
-                self.add_component(obj)
                 
             elif component["ComponentType"] == "HeatExchanger":
                 if "ventilation" in component["SystemType"]:
                     continue
                 else:
                     obj = HeatingCoil(component, x_pos, y_pos)
-
-                    self.add_component(obj)
                 
             elif component["ComponentType"] == "Bend":
 
                 obj = Bend(component, x_pos, y_pos)
-
-                self.add_component(obj)
                 
             elif component["ComponentType"] == "Tee":
 
                 obj = Tee(component, x_pos, y_pos)
-
-                self.add_component(obj)
                 
             elif component["ComponentType"] == "BalancingValve":
 
                 obj = ValveBalancing(component, x_pos, y_pos)
-
-                self.add_component(obj)
                 
             elif component["ComponentType"] == "MotorizedValve":
 
                 obj = ValveMotorized(component, x_pos, y_pos)
-
-                self.add_component(obj)
                 
             elif component["ComponentType"] == "ShuntValve":
 
                 obj = ValveShunt(component, x_pos, y_pos)
-
-                self.add_component(obj)
                 
             elif component["ComponentType"] == "Reduction":
 
                 obj = Reduction(component, x_pos, y_pos)
-
-                self.add_component(obj)
                 
             elif component["ComponentType"] == "AirTerminal":
                 
                 obj = AirTerminal(component, x_pos, y_pos)
 
-                self.add_component(obj)
-
             elif component["ComponentType"] == "MotorizedDamper":
                 
                 obj = DamperMotorized(component, x_pos, y_pos)
 
-                self.add_component(obj)
+            elif component["ComponentType"] == "BalancingDamper":
+                
+                obj = DamperBalancing(component, x_pos, y_pos)
 
             elif component["ComponentType"] == "Fan":
                 
                 obj = Fan(component, x_pos, y_pos)
-
-                self.add_component(obj)
 
             elif component["ComponentType"] == "PressureSensor":
 
@@ -151,23 +129,20 @@ class ModelicaModel:
                 
                 obj.connect_to_outside(self.components["outside"])
 
-                self.add_component(obj)
-
                 self.connection_string += obj.connection_string
 
             elif component["ComponentType"] == "TemperatureSensor":
 
                 obj = TemperatureSensor(component, x_pos, y_pos)
 
-                self.add_component(obj)
-
             else:
 
                 obj = MS4VCObject(component, x_pos, y_pos)
 
-                self.add_component(obj)
-
                 print(f'''// Component with Tag {component["Tag"]} of type {component["ComponentType"]} not recognized and not mapped.''')
+            
+            self.add_component(obj)
+            
             counter += 1
     
     def connect(self, main_component, connected_component):
