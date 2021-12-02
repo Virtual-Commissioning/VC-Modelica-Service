@@ -364,6 +364,8 @@ class Segment(MS4VCObject):
             redeclare package Medium = {self.medium.name},
             allowFlowReversal=true,
             m_flow_nominal={round(m_nom_flow,6)},
+            thicknessIns=0,
+            lambdaIns=0.037,
             diameter={dimension},
             nSeg=2,
             length={length}) 
