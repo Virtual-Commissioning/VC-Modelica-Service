@@ -1100,7 +1100,7 @@ class PressureSensor(MS4VCObject):
 
         outside_port = outside.get_output_port(self)
 
-        self.connection_string = f'''
+        self.connection_string += f'''
         connect({self.modelica_name}.{self.port_names["room_port"]},{outside.name}.{outside_port}) annotation (Line(points={{{{-46,16}},{{-28,
             16}}}}, color={{0,127,255}}));'''
     
