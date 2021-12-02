@@ -730,7 +730,7 @@ class ValveShunt(MS4VCObject):
         self.component_string = f"""
         ToolchainLib.Shunt {self.modelica_name}(res(
             dh={self.FSC_object["ShuntDiameter"]},
-            length={width})
+            length={width}),
             m_flow_nominal={round(m_nom_flow,6)})
             annotation (Placement(transformation(extent={{{{{0+self.x_pos*30},{0+self.y_pos*30}}},{{{20+self.x_pos*30},{20+self.y_pos*30}}}}})));
         """
