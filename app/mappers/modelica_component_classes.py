@@ -881,6 +881,16 @@ class Outside(MS4VCObject):
             "outport": "ports[1]"
         }
     
+    def get_output_port(self, connected_component: MS4VCObject):
+        port_number = len(self.instantiated_connections["output"]) + len(self.instantiated_connections["input"])+1
+        self.instantiated_connections["output"].append(connected_component.name)
+        return f"ports[{port_number}]"
+    
+    def get_input_port(self, connected_component: MS4VCObject):
+        port_number = len(self.instantiated_connections["output"]) + len(self.instantiated_connections["input"])+1
+        self.instantiated_connections["input"].append(connected_component.name)
+        return f"ports[{port_number}]"
+    
     def connect_to_weaBus(self):
         connection_string = f'''
         connect({self.modelica_name}.weaBus,weaBus) annotation (Line(points={{{{-46,16}},{{-28,
@@ -1087,8 +1097,11 @@ class PressureSensor(MS4VCObject):
         }
 
     def connect_to_outside(self, outside):
+
+        outside_port = outside.get_output_port(self)
+
         self.connection_string = f'''
-        connect({self.modelica_name}.{self.port_names["room_port"]},{outside.name}.{outside.port_names["pressure_port"]}) annotation (Line(points={{{{-46,16}},{{-28,
+        connect({self.modelica_name}.{self.port_names["room_port"]},{outside.name}.{outside_port}) annotation (Line(points={{{{-46,16}},{{-28,
             16}}}}, color={{0,127,255}}));'''
     
     def get_result_port(self, PV_type):
@@ -1153,7 +1166,6 @@ class Controller:
             16}}}}, color={{0,127,255}}));
         '''
         
-
     def connect_to_sensor(self, sensor: MS4VCObject):
         port_name = sensor.get_result_port(self.PV_type)
         self.connection_string += f'''
