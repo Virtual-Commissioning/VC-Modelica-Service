@@ -213,6 +213,16 @@ class ModelicaModel:
             for input_tag in input_tags:
                 self.connect(component, self.components[input_tag])
 
+            if component.control != None:
+
+                sensor_tag = component.control.sensor_tag
+                sensor = {**self.components, **self.rooms}[sensor_tag]
+
+                component.control.connect_to_host()
+                component.control.connect_to_sensor(sensor)
+                
+                self.connection_string += component.control.connection_string
+    
             if len(component.FSC_object["ContainedInSpaces"]) > 0:
                 room_tag = component.FSC_object["ContainedInSpaces"][0]
                 self.connection_string += component.connect_to_room(self.rooms[room_tag])
@@ -272,6 +282,7 @@ class MS4VCObject:
             "input": [],
             "output": []
         }
+        self.control = None
 
         self.create_component_string()
 
@@ -297,7 +308,8 @@ class MS4VCObject:
         '''
         self.port_names = {
             "inport": "port_a",
-            "outport": "port_b"
+            "outport": "port_b",
+            "control": "y"
         }
     
     def get_output_port(self, connected_component):
@@ -314,6 +326,10 @@ class MS4VCObject:
         else:
             raise Exception("Max input connections for component reached")
 
+    def get_control_port(self, controller):
+        
+        return self.port_names["control"]
+    
     def calculate_diameters(self):
         """
         Calculates hydraulic diameter of round and rectangular component connections
@@ -681,6 +697,10 @@ class ValveMotorized(MS4VCObject):
 
         super().__init__(FSC_object,x_pos, y_pos)
 
+        self.control = Controller(self,x_pos,y_pos)
+
+        self.component_string += self.control.component_string
+
     def create_component_string(self):
 
         nom_flow = [conn["DesignFlow"] for conn in self.FSC_object["ConnectedWith"] if conn != None][0]/1000 # m3/s
@@ -694,7 +714,7 @@ class ValveMotorized(MS4VCObject):
             Kv={self.FSC_object["Kvs"]})
             annotation (Placement(transformation(extent={{{{{0+self.x_pos*30},{0+self.y_pos*30}}},{{{20+self.x_pos*30},{20+self.y_pos*30}}}}})));
         """
-
+    
 class ValveCheck(MS4VCObject):
 
     modelica_name_prefix = "cheVal"
@@ -943,6 +963,10 @@ class DamperMotorized(MS4VCObject):
 
         super().__init__(FSC_object,x_pos, y_pos)
 
+        self.control = Controller(self,x_pos,y_pos)
+
+        self.component_string += self.control.component_string
+
     def create_component_string(self):
 
         nom_flow = [conn["DesignFlow"] for conn in self.FSC_object["ConnectedWith"] if conn != None][0]/1000 # m3/s
@@ -965,7 +989,11 @@ class Fan(MS4VCObject):
     def __init__(self, FSC_object, x_pos, y_pos):
 
         super().__init__(FSC_object,x_pos, y_pos)
-    
+
+        self.control = Controller(self,x_pos,y_pos)
+
+        self.component_string += self.control.component_string
+
     def create_component_string(self):
         self.component_string = f'''
         Buildings.Fluid.Movers.SpeedControlled_y {self.modelica_name}(
@@ -1026,6 +1054,14 @@ class Room(MS4VCObject):
             '''
         return connection_string
 
+    def get_result_port(self, PV_type):
+        if PV_type == "Temperature":
+            return "airTemp"
+        elif PV_type == "CO2":
+            return "co2Level"
+        else:
+            raise Exception(f"Error: {self.__class__.__name__} does not return {PV_type}!")
+
 class PressureSensor(MS4VCObject):
 
     modelica_name_prefix = "senPre"
@@ -1054,6 +1090,12 @@ class PressureSensor(MS4VCObject):
         connect({self.modelica_name}.{self.port_names["room_port"]},{outside.name}.{outside.port_names["pressure_port"]}) annotation (Line(points={{{{-46,16}},{{-28,
             16}}}}, color={{0,127,255}}));'''
     
+    def get_result_port(self, PV_type):
+        if PV_type == "Pressure":
+            return self.port_names["result_port"]
+        else:
+            raise Exception(f"Error: {self.__class__.__name__} does not return {PV_type}!")
+    
 class TemperatureSensor(MS4VCObject):
 
     modelica_name_prefix = "senTem"
@@ -1079,3 +1121,57 @@ class TemperatureSensor(MS4VCObject):
             "outport": "port_b",
             "result_port": "T"
         }
+    def get_result_port(self, PV_type):
+        if PV_type == "Temperature":
+            return self.port_names["result_port"]
+        else:
+            raise Exception(f"Error: {self.__class__.__name__} does not return {PV_type}!")
+ 
+class Controller:
+    def __init__(self, host: MS4VCObject, x_pos, y_pos):
+        self.name = "con"+host.name
+        self.modelica_name = self.name
+        self.host = host
+        self.sensor_tag = host.FSC_object["Control"]["ProcessVariableComponentTag"]
+        self.control_type = host.FSC_object["Control"]["Type"]
+        self.setpoint = host.FSC_object["Control"]["Setpoint"]
+        self.PV_type = host.FSC_object["Control"]["ProcessVariableParameterType"]
+        self.y_pos = y_pos
+        self.x_pos = x_pos
+        self.connection_string = ''
+        self.port_names = {
+            "sensor_port": "u_m",
+            "output_port": "y"
+        }
+        self.create_component_string()
+    
+    def connect_to_host(self):
+        port_name = self.host.get_control_port(self)
+        self.connection_string += f'''
+        connect({self.host.modelica_name}.{port_name}, {self.modelica_name}.{self.port_names["output_port"]}) annotation (Line(points={{{{-46,16}},{{-28,
+            16}}}}, color={{0,127,255}}));
+        '''
+        
+
+    def connect_to_sensor(self, sensor: MS4VCObject):
+        port_name = sensor.get_result_port(self.PV_type)
+        self.connection_string += f'''
+        connect({sensor.modelica_name}.{port_name}, {self.modelica_name}.{self.port_names["sensor_port"]}) annotation (Line(points={{{{-46,16}},{{-28,
+            16}}}}, color={{0,127,255}}));
+        '''
+    
+    def create_component_string(self):
+        if self.host.FSC_object["SystemType"] == "Cooling":
+            reverseAction = "true"
+        else:
+            reverseAction = "false"
+
+        if self.control_type in ["P", "PI", "PD", "PID"]:
+            self.component_string = f'''
+        ToolchainLib.PIDControl {self.name}(conPID(controllerType=Modelica.Blocks.Types.SimpleController.{self.control_type},
+            reverseAction={reverseAction}), setPoint={self.setpoint})
+            annotation (Placement(transformation(extent={{{{{0+self.x_pos*30},{0+self.y_pos*30}}},{{{20+self.x_pos*30},{20+self.y_pos*30}}}}})));
+        '''
+
+        else:
+            raise NotImplementedError("Controllers currently only support PID controllers")
