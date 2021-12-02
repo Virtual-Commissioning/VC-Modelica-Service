@@ -161,6 +161,7 @@ class ModelicaModel:
             '''
 
     def connect_all_components(self):
+        component: MS4VCObject
         for component in self.components.values():
             
             if component.FSC_object == None:
