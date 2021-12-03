@@ -1201,7 +1201,7 @@ class Controller:
         '''
     
     def create_component_string(self):
-        if self.host.FSC_object["SystemType"] == "Cooling":
+        if self.host.FSC_object["SystemType"] == "cooling" or self.PV_type == "CO2":
             reverseAction = "true"
         else:
             reverseAction = "false"
