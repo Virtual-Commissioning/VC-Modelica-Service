@@ -1174,8 +1174,11 @@ class Controller:
         self.host = host
         self.sensor_tag = host.FSC_object["Control"]["ProcessVariableComponentTag"]
         self.control_type = host.FSC_object["Control"]["Type"]
-        self.setpoint = host.FSC_object["Control"]["Setpoint"]
         self.PV_type = host.FSC_object["Control"]["ProcessVariableParameterType"]
+        if self.PV_type == "Temperature":
+            self.setpoint = host.FSC_object["Control"]["Setpoint"] + 273.15
+        else:
+            self.setpoint = host.FSC_object["Control"]["Setpoint"]
         self.y_pos = y_pos
         self.x_pos = x_pos
         self.connection_string = ''
