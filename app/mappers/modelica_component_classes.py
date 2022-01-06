@@ -365,15 +365,12 @@ class Segment(MS4VCObject):
         length = self.calculate_length()
 
         self.component_string += f'''
-        Buildings.Fluid.FixedResistances.Pipe {self.modelica_name}(
+        Buildings.Fluid.FixedResistances.HydraulicDiameter {self.modelica_name}(
             redeclare package Medium = {self.medium.name},
             allowFlowReversal=true,
             m_flow_nominal={round(m_nom_flow,6)},
-            thicknessIns=0,
-            lambdaIns=0.037,
-            diameter={dimension},
-            nSeg=2,
-            length={length}) 
+            dh={dimension},
+            length={length})
             annotation (Placement(transformation(extent={{{{{0+self.x_pos*30},{0+self.y_pos*30}}},{{{20+self.x_pos*30},{20+self.y_pos*30}}}}})));
         '''
 
