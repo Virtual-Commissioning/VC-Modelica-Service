@@ -1,62 +1,7 @@
 import json
 import os
-import time
-from app.mappers.modelica_mapper import map_to_modelica_model
 from buildingspy.simulate.Simulator import Simulator
 from buildingspy.io.outputfile import Reader
-
-
-def convert_simulate_modelica(data):
-    
-    start_time = time.perf_counter() # Timer
-
-    # Get data
-    data_parsed = json.loads(data)
-    system = extract_components_from_data(data_parsed,["heating"]) # Extract system from data
-
-    # Needs info on package/model name and simulation parameters (days)
-    package_name = "Auto_Generated"
-    model_name = "Model"
-    days = 1
-
-    modelica_model, modelica_package = map_to_modelica_model(system,days,package_name,model_name)
-    
-    pa_path = f"temp\\{package_name}"
-    if not os.path.exists(pa_path):
-        os.makedirs(pa_path)
-    pa_fp = os.path.join(pa_path,"package.mo")
-    with open(pa_fp, "w") as pa_file:
-        pa_file.write(modelica_package)
-        pa_file.close()
-
-    mo_fp = os.path.join(pa_path,f"{model_name}.mo")
-    with open(mo_fp, "w") as mo_file:
-        mo_file.write(modelica_model)
-        mo_file.close()
-
-    model_creation_time = time.perf_counter()- start_time
-
-    # Simulate model
-    solver = "dassl"
-    simulation_model = f"{package_name}.{model_name}"
-    output_dir = f"temp\\{package_name}_Output"
-    package_path = f"temp\\{package_name}"
-
-    simulate_modelica_model(days,output_dir,package_path,solver,simulation_model)
-
-    model_simulation_time = time.perf_counter() - start_time - model_creation_time
-    # Read results file
-    mat_file = os.path.join(output_dir,f"{model_name}.mat")
-    
-    results = read_simulation_results(system,mat_file,output_dir)
-    results_reading_time = time.perf_counter() - start_time - model_simulation_time
-    total_time = time.perf_counter() - start_time
-    print(f"Model creation time: \t {model_creation_time}")
-    print(f"Model simulation time: \t {model_simulation_time}")
-    print(f"Results reading time: \t {results_reading_time}")
-    print(f"Total time: \t {total_time}")
-    
-    return results
 
 def extract_components_from_data(data,wanted_systems):
 
