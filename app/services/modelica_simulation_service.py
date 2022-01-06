@@ -29,7 +29,7 @@ def simulate_modelica_model(days,output_dir,package_path, solver="dassl",model =
     print("Simulation done!")
     return
 
-def read_simulation_results(system,mat_file,output_dir):
+def read_simulation_results(system,mat_file):
     # Read results from
     r = Reader(mat_file, "dymola")
 
