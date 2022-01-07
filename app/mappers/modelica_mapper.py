@@ -14,4 +14,4 @@ def map_to_modelica_model(system,rooms,days,package_name = "Auto_Generated", mod
 
     pa_file = model.package_string
 
-    return mo_file, pa_file
+    return mo_file, pa_file, model
