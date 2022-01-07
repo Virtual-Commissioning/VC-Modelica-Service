@@ -40,7 +40,7 @@ def create_modelica_model():
     # modelica_package = create_modelica_package(package_name)
     modelica_model, modelica_package = map_to_modelica_model(system,rooms,days,package_name,model_name)
 
-    pa_path = f"temp\\{package_name}"
+    pa_path = f"Temp\\{package_name}"
     if not os.path.exists(pa_path):
         os.makedirs(pa_path)
     
