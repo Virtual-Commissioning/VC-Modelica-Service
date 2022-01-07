@@ -4,7 +4,7 @@ def map_to_modelica_model(system,rooms,days,package_name = "Auto_Generated", mod
    
     model = cl.ModelicaModel(package_name, model_name)
 
-    model.map_components(system)
+    model.add_components(system)
     
     model.add_rooms(rooms)
 

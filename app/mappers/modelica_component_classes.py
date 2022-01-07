@@ -54,7 +54,7 @@ class ModelicaModel:
         self.model_string = self.start_string + self.component_string + self.room_string + self.connection_string + self.end_string
         self.create_modelica_package()
 
-    def map_components(self, system):
+    def add_components(self, system):
         counter = 0 # Counter for distribution of components
         gridwidth = 9 # Width of the visual distribution of the components
         
