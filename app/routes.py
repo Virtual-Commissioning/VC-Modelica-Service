@@ -53,11 +53,24 @@ def create_modelica_model():
         mo_file.write(modelica_model)
         mo_file.close()
 
-    duration = round(time.perf_counter() - start_time,2)
+    build_stop = time.perf_counter()
+
+
+    
+    # modelica_simulation_service.simulate_modelica_model(1,"Temp/results",pa_path,model=package_name+'.'+model_name)
+    sim_stop = time.perf_counter()
+
+    results = modelica_simulation_service.read_simulation_results(model,"Temp/results/"+model_name+".mat")
+
+    read_stop = time.perf_counter()
+
     dict_output = {
-        "build_time [s]" : duration,
-        "package": modelica_package,
-        "model": modelica_model
+        "build time [s]" : round(build_stop-start_time,2),
+        "simulation time [s]":  round(sim_stop-build_stop,2),
+        "result reading time [s]":  round(read_stop-sim_stop,2),
+        # "package": modelica_package,
+        # "model": modelica_model,
+        "results": results
     }
 
     json_output = json.dumps(dict_output,indent=4)
