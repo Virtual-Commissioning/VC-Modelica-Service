@@ -3,6 +3,8 @@ import os
 from buildingspy.simulate.Simulator import Simulator
 from buildingspy.io.outputfile import Reader
 
+from app.mappers.modelica_component_classes import ModelicaModel, MS4VCObject
+
 def extract_components_from_data(data,wanted_systems):
 
     components = []
@@ -29,7 +31,7 @@ def simulate_modelica_model(days,output_dir,package_path, solver="dassl",model =
     print("Simulation done!")
     return
 
-def read_simulation_results(system,mat_file):
+def read_simulation_results(system: ModelicaModel,mat_file):
     # Read results from
     r = Reader(mat_file, "dymola")
 
@@ -41,22 +43,22 @@ def read_simulation_results(system,mat_file):
 
     results = {}
     i = 0
-    for comp in system:
+    for object in system.components.values():
+        object: MS4VCObject
         # get needed results for component based on it's class
-        if comp["ComponentType"] != "FlowController" and comp["ComponentType"] != "FlowMovingDevice":
-            keys = res_keys[comp["ComponentType"]]
-        elif comp["ComponentType"] == "FlowMovingDevice":
-            keys = res_keys[comp["ComponentType"]][comp["control_type"]]
-        elif comp["ComponentType"] == "FlowController":
-            keys = res_keys[comp["ComponentType"]][comp["ValveType"]]
+        FSC_object = object.FSC_object
+        if FSC_object == None:
+            continue
+        
+        keys = res_keys[FSC_object["ComponentType"]]
         
         comp_results = {}
         for key in keys:
-            (t,y) = r.values(f'''c{comp["Tag"]}.{key}''')
+            (t,y) = r.values(f'''{object.modelica_name}.{key}''')
             comp_results[key] = dict(zip(t.tolist(),y.tolist()))
         
-        results[comp["Tag"]] = comp_results
+        results[FSC_object["Tag"]] = comp_results
         
         i+=1
     results_json = json.dumps(results, indent = 4)
-    return results_json
+    return results
