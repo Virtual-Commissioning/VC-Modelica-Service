@@ -971,7 +971,7 @@ class DamperMotorized(MS4VCObject):
 
         super().__init__(FSC_object,x_pos, y_pos)
 
-        self.control = Controller(self,x_pos,y_pos)
+        self.control = Controller(self,x_pos,y_pos,y_min=0.2)
 
         self.component_string += self.control.component_string
 
@@ -1179,7 +1179,7 @@ class TemperatureSensor(MS4VCObject):
             raise Exception(f"Error: {self.__class__.__name__} does not return {PV_type}!")
  
 class Controller:
-    def __init__(self, host: MS4VCObject, x_pos, y_pos, k = 1, t_i = 0.5):
+    def __init__(self, host: MS4VCObject, x_pos, y_pos, k = 1, t_i = 0.5, y_min = 0):
         self.name = "con"+host.name
         self.modelica_name = self.name
         self.host = host
@@ -1200,6 +1200,7 @@ class Controller:
         }
         self.k = k
         self.t_i = t_i
+        self.y_min = y_min
         self.create_component_string()
     
     def connect_to_host(self):
@@ -1227,6 +1228,7 @@ class Controller:
         ToolchainLib.PIDControl {self.name}(conPID(controllerType=Modelica.Blocks.Types.SimpleController.{self.control_type},
             k={self.k},
             Ti={self.t_i},
+            yMin={self.y_min},
             reverseAction={reverseAction}), setPoint={self.setpoint})
             annotation (Placement(transformation(extent={{{{{0+self.x_pos*30},{0+self.y_pos*30}}},{{{20+self.x_pos*30},{20+self.y_pos*30}}}}})));
         '''
