@@ -57,7 +57,7 @@ def create_modelica_model():
 
 
     
-    # modelica_simulation_service.simulate_modelica_model(1,"Temp/results",pa_path,model=package_name+'.'+model_name)
+    modelica_simulation_service.simulate_modelica_model(data_parsed["simStart"],data_parsed["simStop"],"Temp/results",pa_path,model=package_name+'.'+model_name)
     sim_stop = time.perf_counter()
 
     results = modelica_simulation_service.read_simulation_results(model,"Temp/results/"+model_name+".mat")
