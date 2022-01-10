@@ -1022,7 +1022,7 @@ class Fan(MS4VCObject):
 
         super().__init__(FSC_object,x_pos, y_pos)
 
-        self.control = Controller(self,x_pos,y_pos,k=0.1)
+        self.control = Controller(self,x_pos,y_pos,k=0.05,t_i=200)
 
         self.component_string += self.control.component_string
 
