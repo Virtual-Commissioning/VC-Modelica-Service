@@ -14,14 +14,22 @@ def extract_components_from_data(data,wanted_systems):
     
     return components
 
-def simulate_modelica_model(days,output_dir,package_path, solver="dassl",model = "Auto_Generated.Model"):
+def simulate_modelica_model(sim_start,sim_stop,output_dir,package_path, solver="dassl",model = "Auto_Generated.Model"):
+    '''
+    sim_start:      start hour of simulation - can be set to negative, if an initialization period is wanted
+    sim_stop:       stop time of simulation in days
+    output_dir:     directory of simulation results
+    package_path:   path of package
+    solver:         choose numerical solver (default: dassl)
+    model:          name of simulated model (default: Auto_Generated.Model)
+    '''
     # Parameters:
-    duration = 24*60*60*days # set duration in seconds based on input
+    duration = 24*60*60*sim_stop # set duration in seconds based on input
     intervals = duration/(3600/6) # define number of intervals in output - every 10 minutes
 
     s=Simulator(model, "dymola",outputDirectory=output_dir,packagePath=package_path) # instantiate model for simulation
 
-    s.setStartTime(-24*3600) # set start time to -1 days for initialization
+    s.setStartTime(sim_start*3600) # set start time of simulation
     s.setStopTime(duration) # set stop time of simulation
     s.setSolver(solver) # set solver - default is DASSL
     s.setNumberOfIntervals(int(intervals)) # define number of intervals in output
