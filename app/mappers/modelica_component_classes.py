@@ -546,8 +546,8 @@ class HeatingCoil(MS4VCObject):
         Buildings.Fluid.HeatExchangers.DryCoilCounterFlow {self.modelica_name}(
             redeclare package Medium1 = {MediumVentilation().name},
             redeclare package Medium2 = {self.medium.name},
-            m1_flow_nominal={self.FSC_object["NomFlowPrimary"]},
-            m2_flow_nominal={self.FSC_object["NomFlowSecondary"]},
+            m1_flow_nominal={self.FSC_object["NomFlowPrimary"]*10**(-3)*MediumVentilation().rho},
+            m2_flow_nominal={self.FSC_object["NomFlowSecondary"]*10**(-3)*self.medium.rho},
             show_T=true,
             dp1_nominal={self.FSC_object["NomDpPrimary"]},
             dp2_nominal={self.FSC_object["NomDpSecondary"]},
