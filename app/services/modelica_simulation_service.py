@@ -3,7 +3,7 @@ import os
 from buildingspy.simulate.Simulator import Simulator
 from buildingspy.io.outputfile import Reader
 
-from app.mappers.modelica_component_classes import ModelicaModel, MS4VCObject
+from app.mappers.modelica_component_classes import ModelicaModel, MS4VCObject, Room
 
 def extract_components_from_data(data,wanted_systems):
 
@@ -68,5 +68,14 @@ def read_simulation_results(system: ModelicaModel,mat_file):
         results[FSC_object["Tag"]] = comp_results
         
         i+=1
+    for room in system.rooms.values():
+        room: Room
+        keys = res_keys["Room"]
+        comp_results = {}
+        for key in keys:
+            (t,y) = r.values(f'''{room.modelica_name}.{key}''')
+            comp_results[key] = dict(zip(t.tolist(),y.tolist()))
+        
+        results[room.name] = comp_results
     results_json = json.dumps(results, indent = 4)
     return results
