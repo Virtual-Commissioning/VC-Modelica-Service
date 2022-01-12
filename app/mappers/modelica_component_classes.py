@@ -730,7 +730,7 @@ class ValveCheck(MS4VCObject):
             m_flow_nominal={round(m_nom_flow,6)},
             CvData=Buildings.Fluid.Types.CvTypes.Kv,
             Kv={self.FSC_object["Kvs"]},
-            redeclare package Medium = {self.medium})
+            redeclare package Medium = {self.medium.name})
             annotation (Placement(transformation(extent={{{{{0+self.x_pos*30},{0+self.y_pos*30}}},{{{20+self.x_pos*30},{20+self.y_pos*30}}}}})));
         """
 
@@ -751,9 +751,10 @@ class ValveShunt(MS4VCObject):
 
         self.component_string += f"""
         ToolchainLib.Shunt {self.modelica_name}(res(
-            dh={self.FSC_object["ShuntDiameter"]},
+            dh={self.FSC_object["ShuntDiameter"]*0.001},
             length={width}),
-            m_flow_nominal={round(m_nom_flow,6)})
+            m_flow_nominal={round(m_nom_flow,6)},
+            redeclare package Medium = {self.medium.name})
             annotation (Placement(transformation(extent={{{{{0+self.x_pos*30},{0+self.y_pos*30}}},{{{20+self.x_pos*30},{20+self.y_pos*30}}}}})));
         """
     
