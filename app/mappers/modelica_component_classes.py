@@ -22,7 +22,7 @@ class ModelicaModel:
         
         package MediumHeating = Buildings.Media.Water(T_default=273.15+70) annotation (
             __Dymola_choicesAllMatching=true);
-        package MediumCooling = Buildings.Media.Water(T_default=273.15+5) annotation (
+        package MediumCooling = Buildings.Media.Antifreeze.PropyleneGlycolWater(property_T=273.15 + 5, X_a=0.35, T_default=273.15 + 5) annotation (
             __Dymola_choicesAllMatching=true);
         package MediumVentilation = Buildings.Media.Air(extraPropertiesNames={{"CO2"}}) annotation (
             __Dymola_choicesAllMatching=true);
@@ -394,10 +394,10 @@ class Pump(MS4VCObject):
 
     def create_component_string(self):
         
-        pressure_curve_flow = ', '.join(map(str,[float(element) * 60 for element in list(self.FSC_object["PressureCurve"].keys())]))
+        pressure_curve_flow = ', '.join(map(str,[float(element) * 10**(-3) for element in list(self.FSC_object["PressureCurve"].keys())]))
         pressure_curve = ', '.join(map(str,list(self.FSC_object["PressureCurve"].values())))
         
-        power_curve_flow = ', '.join(map(str,[float(element) * 60 for element in list(self.FSC_object["PowerCurve"].keys())]))
+        power_curve_flow = ', '.join(map(str,[float(element) * 10**(-3) for element in list(self.FSC_object["PowerCurve"].keys())]))
         power_curve = ', '.join(map(str,list(self.FSC_object["PowerCurve"].values())))
 
         if self.FSC_object["Control"]["ControlType"] == "ConstantSpeedControl":
@@ -406,9 +406,9 @@ class Pump(MS4VCObject):
             redeclare package Medium = {self.medium.name},
             speed={self.FSC_object["Control"]["Speed"]},
             pum(
-            per(pressure(V_flow(displayUnit="l/min")={{{pressure_curve_flow}}}, dp={{{pressure_curve}}}),
+            per(pressure(V_flow(displayUnit="m3/s")={{{pressure_curve_flow}}}, dp={{{pressure_curve}}}),
             use_powerCharacteristic=true,
-            power(V_flow(displayUnit="l/min")={{{power_curve_flow}}}, P={{{power_curve}}}))))
+            power(V_flow(displayUnit="m3/s")={{{power_curve_flow}}}, P={{{power_curve}}}))))
             annotation (Placement(transformation(extent={{{{{0+self.x_pos*30},{0+self.y_pos*30}}},{{{20+self.x_pos*30},{20+self.y_pos*30}}}}})));
             '''
         elif self.FSC_object["Control"]["ControlType"] == "ConstantPressureControl":
@@ -416,9 +416,9 @@ class Pump(MS4VCObject):
         ToolchainLib.PumpConstantPressure {self.modelica_name}(
             redeclare package Medium = {self.medium.name},
             pum(p_start(displayUnit="Pa") = {self.FSC_object["Control"]["Pressure"]},
-            per(pressure(V_flow(displayUnit="l/min")={{{pressure_curve_flow}}}, dp={{{pressure_curve}}}),
+            per(pressure(V_flow(displayUnit="m3/s")={{{pressure_curve_flow}}}, dp={{{pressure_curve}}}),
             use_powerCharacteristic=true,
-            power(V_flow(displayUnit="l/min")={{{power_curve_flow}}}, P={{{power_curve}}}))),
+            power(V_flow(displayUnit="m3/s")={{{power_curve_flow}}}, P={{{power_curve}}}))),
             constPressure(displayUnit="Pa") = {self.FSC_object["Control"]["Pressure"]})
             annotation (Placement(transformation(extent={{{{{0+self.x_pos*30},{0+self.y_pos*30}}},{{{20+self.x_pos*30},{20+self.y_pos*30}}}}})));
             '''
@@ -426,9 +426,9 @@ class Pump(MS4VCObject):
             self.component_string += f'''
         Buildings.Fluid.Movers.SpeedControlled_y {self.modelica_name}(
             redeclare package Medium = {self.medium.name},
-            per(pressure(V_flow(displayUnit="l/min")={{{pressure_curve_flow}}}, dp={{{pressure_curve}}}),
+            per(pressure(V_flow(displayUnit="m3/s")={{{pressure_curve_flow}}}, dp={{{pressure_curve}}}),
             use_powerCharacteristic=true,
-            power(V_flow(displayUnit="l/min")={{{power_curve_flow}}}, P={{{power_curve}}})))
+            power(V_flow(displayUnit="m3/s")={{{power_curve_flow}}}, P={{{power_curve}}})))
             annotation (Placement(transformation(extent={{{{{0+self.x_pos*30},{0+self.y_pos*30}}},{{{20+self.x_pos*30},{20+self.y_pos*30}}}}})));
             '''
         else:
@@ -860,7 +860,6 @@ class Plant(MS4VCObject):
         ToolchainLib.GenericPlant {self.modelica_name}(
             redeclare package Medium = {self.medium.name},
             m_flow_nom={self.nom_flow},
-            bou(use_T_in=true),
             setpoint={self.temp})
             annotation (Placement(transformation(extent={{{{{0+self.x_pos*30},{0+self.y_pos*30}}},{{{20+self.x_pos*30},{20+self.y_pos*30}}}}})));
         """
@@ -972,7 +971,7 @@ class DamperMotorized(MS4VCObject):
 
         super().__init__(FSC_object,x_pos, y_pos)
 
-        self.control = Controller(self,x_pos,y_pos,y_min=0.2)
+        self.control = Controller(self,x_pos,y_pos,y_min=0.2,k=0.5,t_i=100)
 
         self.component_string += self.control.component_string
 
@@ -1036,18 +1035,18 @@ class Fan(MS4VCObject):
         self.component_string += self.control.component_string
 
     def create_component_string(self):
-        pressure_curve_flow = ', '.join(map(str,[float(element) * 60 for element in list(self.FSC_object["PressureCurve"].keys())]))
+        pressure_curve_flow = ', '.join(map(str,[float(element) * 10**(-3) for element in list(self.FSC_object["PressureCurve"].keys())]))
         pressure_curve = ', '.join(map(str,list(self.FSC_object["PressureCurve"].values())))
         
-        power_curve_flow = ', '.join(map(str,[float(element) * 60 for element in list(self.FSC_object["PowerCurve"].keys())]))
+        power_curve_flow = ', '.join(map(str,[float(element) * 10**(-3) for element in list(self.FSC_object["PowerCurve"].keys())]))
         power_curve = ', '.join(map(str,list(self.FSC_object["PowerCurve"].values())))
 
         self.component_string += f'''
         Buildings.Fluid.Movers.SpeedControlled_y {self.modelica_name}(
             redeclare package Medium = {self.medium.name},
-            per(pressure(V_flow(displayUnit="l/min")={{{pressure_curve_flow}}}, dp={{{pressure_curve}}}),
+            per(pressure(V_flow(displayUnit="m3/s")={{{pressure_curve_flow}}}, dp={{{pressure_curve}}}),
             use_powerCharacteristic=true,
-            power(V_flow(displayUnit="l/min")={{{power_curve_flow}}}, P={{{power_curve}}})))
+            power(V_flow(displayUnit="m3/s")={{{power_curve_flow}}}, P={{{power_curve}}})))
             annotation (Placement(transformation(extent={{{{{0+self.x_pos*30},{0+self.y_pos*30}}},{{{20+self.x_pos*30},{20+self.y_pos*30}}}}})));
             '''
 
