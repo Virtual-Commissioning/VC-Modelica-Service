@@ -694,7 +694,7 @@ class ValveMotorized(MS4VCObject):
 
         super().__init__(FSC_object,x_pos, y_pos)
 
-        self.control = Controller(self,x_pos,y_pos,k=0.5,t_i=100)
+        self.control = Controller(self,x_pos,y_pos,k=0.5,t_i=500)
 
         self.component_string += self.control.component_string
 
