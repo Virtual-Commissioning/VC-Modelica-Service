@@ -4,7 +4,7 @@ def map_to_modelica_model(system,wanted_systems,rooms,start_day,stop_day,package
    
     model = cl.ModelicaModel(package_name, model_name,start_day,stop_day)
 
-    model.add_components(system)
+    model.add_components(system,wanted_systems)
     
     model.add_rooms(rooms)
 
