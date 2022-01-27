@@ -1,6 +1,6 @@
 import json
 import os
-from flask import request
+from flask import request, Response
 import time
 
 from app import app
@@ -65,13 +65,13 @@ def create_modelica_model():
     read_stop = time.perf_counter()
 
     dict_output = {
-        "build time [s]" : round(build_stop-start_time,2),
-        "simulation time [s]":  round(sim_stop-build_stop,2),
-        "result reading time [s]":  round(read_stop-sim_stop,2),
-        # "package": modelica_package,
-        # "model": modelica_model,
-        "results": results
+        "build time [s]" : round(build_stop-start_time,2)
+        ,"simulation time [s]":  round(sim_stop-build_stop,2)
+        ,"result reading time [s]":  round(read_stop-sim_stop,2)
+        # ,"package": modelica_package
+        # ,"model": modelica_model
+        ,"results": results
     }
 
     json_output = json.dumps(dict_output,indent=4)
-    return json_output
+    return Response(json_output,content_type="text/json")
