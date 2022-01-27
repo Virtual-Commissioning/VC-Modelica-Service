@@ -809,25 +809,24 @@ class Reduction(MS4VCObject):
         inlet_diameter = diameters[directions.index("suppliesFluidFrom")]
         output_diameter = diameters[directions.index("suppliesFluidTo")]
 
+        v_nom_flow = [conn["DesignFlow"] for conn in self.FSC_object["ConnectedWith"] if conn != None][0]/1000 # Flow in m3/s
+        m_nom_flow = v_nom_flow*self.medium.rho
         
         if inlet_diameter>=output_diameter:
             d1 = max(diameters)
             d2 = min(diameters)
             
             k2 = fluids.fittings.contraction_conical_Crane(d1,d2,length)
-        
+            v = v_nom_flow/((d2/2)**2*math.pi)
+
         if inlet_diameter<output_diameter:
             d1 = min(diameters)
             d2 = max(diameters)
             
             k2 = fluids.fittings.diffuser_conical(d1,d2,length,method="Crane")
-                
-        v_nom_flow = [conn["DesignFlow"] for conn in self.FSC_object["ConnectedWith"] if conn != None][0]/1000 # Flow in m3/s
-        m_nom_flow = v_nom_flow*self.medium.rho
+            v = v_nom_flow/((d1/2)**2*math.pi)
         
-        v2 = v_nom_flow/((d2/2)**2*math.pi)
-        
-        dp_nominal = round(k2*1/2*1000*v2**2,4)
+        dp_nominal = round(k2*1/2*1000*v**2,4)
 
         self.component_string += f"""
         Buildings.Fluid.FixedResistances.PressureDrop {self.modelica_name}(
