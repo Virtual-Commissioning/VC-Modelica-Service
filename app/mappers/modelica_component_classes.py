@@ -547,7 +547,7 @@ class HeatingCoil(MS4VCObject):
         UA = Q/LMTD
 
         self.component_string += f'''
-        Buildings.Fluid.HeatExchangers.DryCoilCounterFlow {self.modelica_name}(
+        Buildings.Fluid.HeatExchangers.DryCoilEffectivenessNTU {self.modelica_name}(
             redeclare package Medium1 = {MediumVentilation().name},
             redeclare package Medium2 = {self.medium.name},
             m1_flow_nominal={self.FSC_object["NomFlowPrimary"]*10**(-3)*MediumVentilation().rho},
@@ -555,7 +555,10 @@ class HeatingCoil(MS4VCObject):
             show_T=true,
             dp1_nominal={self.FSC_object["NomDpPrimary"]},
             dp2_nominal={self.FSC_object["NomDpSecondary"]},
-            UA_nominal={round(UA,2)})
+            configuration=Buildings.Fluid.Types.HeatExchangerConfiguration.CrossFlowStream1MixedStream2Unmixed,
+            Q_flow_nominal={Q},
+            T_a1_nominal={self.FSC_object["NomSupplyTemperaturePrimary"]+273.15},
+            T_a2_nominal={self.FSC_object["NomSupplyTemperatureSecondary"]+273.15})
             annotation (Placement(transformation(extent={{{{{20+self.x_pos*30},{0+self.y_pos*30}}},{{{0+self.x_pos*30},{20+self.y_pos*30}}}}})));
             '''
     
