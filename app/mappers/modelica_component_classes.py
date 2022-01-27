@@ -3,7 +3,7 @@ import fluids
 
 class ModelicaModel:
     
-    def __init__(self,package_name = "AutoPackage", model_name = "AutoModel"):
+    def __init__(self,package_name = "AutoPackage", model_name = "AutoModel",start_time = 0, stop_time = 7):
         self.package_name = package_name
         self.model_name = model_name
         self.components = {}
@@ -11,7 +11,8 @@ class ModelicaModel:
         self.component_string = ""
         self.room_string = ""
         self.connection_string = '''\n\tequation\n'''
-        self.days = 1
+        self.start_day = start_time
+        self.stop_day = stop_time
     
     def add_component(self,component):
         self.components[component.name] = component
@@ -28,10 +29,11 @@ class ModelicaModel:
             __Dymola_choicesAllMatching=true);
         '''
     
-    def end_model(self,days): # Last part of model
-        stop_time = 24*60*60*days
+    def end_model(self): # Last part of model
+        start_second = self.start_day*24*60*60
+        stop_second = self.stop_day*24*60*60
         self.end_string = f'''
-        annotation (experiment(StopTime={stop_time}, __Dymola_Algorithm="Dassl"));
+        annotation (experiment(StartTime={start_second},StopTime={stop_second}, __Dymola_Algorithm="Dassl"));
       end {self.model_name};'''
 
     def create_modelica_package(self):
@@ -42,7 +44,7 @@ class ModelicaModel:
     
     def create_modelica_model(self):
         self.start_model()
-        self.end_model(self.days)
+        self.end_model()
         self.connect_all_components()
         for component in self.components.values():
             component: MS4VCObject

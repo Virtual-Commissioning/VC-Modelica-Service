@@ -37,7 +37,7 @@ def create_modelica_model():
     model_name = "Model"
     days = 1
 
-    modelica_model, modelica_package, model = map_to_modelica_model(system,rooms,days,package_name,model_name)
+    modelica_model, modelica_package, model = map_to_modelica_model(system,wanted_systems,rooms,data_parsed["simStart"],data_parsed["simStop"],package_name,model_name)
 
     pa_path = f"Temp\\{package_name}"
     if not os.path.exists(pa_path):
