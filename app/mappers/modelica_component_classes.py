@@ -1168,7 +1168,11 @@ class TemperatureSensor(MS4VCObject):
 
         self.component_string += f'''
         Buildings.Fluid.Sensors.TemperatureTwoPort {self.modelica_name}(redeclare package Medium = 
-            {self.medium.name}, m_flow_nominal={round(m_nom_flow,6)})
+            {self.medium.name},
+            m_flow_nominal={round(m_nom_flow,6)},
+            transferHeat=true,
+            TAmb=294.15,
+            tauHeaTra=600)
             annotation (Placement(transformation(extent={{{{{0+self.x_pos*30},{0+self.y_pos*30}}},{{{20+self.x_pos*30},{20+self.y_pos*30}}}}})));
             '''
 
