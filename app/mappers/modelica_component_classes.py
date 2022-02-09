@@ -701,7 +701,7 @@ class ValveMotorized(MS4VCObject):
 
         super().__init__(FSC_object,x_pos, y_pos)
 
-        self.control = Controller(self,x_pos,y_pos,k=0.5,t_i=500)
+        self.control = Controller(self,x_pos,y_pos,k=0.05,t_i=100)
 
         self.component_string += self.control.component_string
 
@@ -977,7 +977,7 @@ class DamperMotorized(MS4VCObject):
 
         super().__init__(FSC_object,x_pos, y_pos)
 
-        self.control = Controller(self,x_pos,y_pos,y_min=0.2,k=0.5,t_i=100)
+        self.control = Controller(self,x_pos,y_pos,k=0.02,t_i=100)
 
         self.component_string += self.control.component_string
 
@@ -1036,7 +1036,7 @@ class Fan(MS4VCObject):
 
         super().__init__(FSC_object,x_pos, y_pos)
 
-        self.control = Controller(self,x_pos,y_pos,k=0.05,t_i=200)
+        self.control = Controller(self,x_pos,y_pos,k=0.01,t_i=1000,on_off_switch=True)
 
         self.component_string += self.control.component_string
 
