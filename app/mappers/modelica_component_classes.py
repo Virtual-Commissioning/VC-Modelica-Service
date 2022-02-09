@@ -833,7 +833,7 @@ class Reduction(MS4VCObject):
             k2 = fluids.fittings.diffuser_conical(d1,d2,length,method="Crane")
             v = v_nom_flow/((d1/2)**2*math.pi)
         
-        dp_nominal = round(k2*1/2*1000*v**2,4)
+        dp_nominal = round(k2*1/2*self.medium.rho*v**2,4)
 
         self.component_string += f"""
         Buildings.Fluid.FixedResistances.PressureDrop {self.modelica_name}(
