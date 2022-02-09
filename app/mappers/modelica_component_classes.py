@@ -1139,13 +1139,15 @@ class PressureSensor(MS4VCObject):
             "result_port": "statPres"
         }
 
-    def connect_to_outside(self, outside):
+    def connect_to_room(self, room: Room):
 
-        outside_port = outside.get_output_port(self)
+        outside_port = room.get_output_port(self)
 
-        self.connection_string += f'''
-        connect({self.modelica_name}.{self.port_names["room_port"]},{outside.name}.{outside_port}) annotation (Line(points={{{{-46,16}},{{-28,
+        connection_string = f'''
+        connect({self.modelica_name}.{self.port_names["room_port"]},{room.modelica_name}.{outside_port}) annotation (Line(points={{{{-46,16}},{{-28,
             16}}}}, color={{0,127,255}}));'''
+            
+        return connection_string
     
     def get_result_port(self, PV_type):
         if PV_type == "Pressure":
