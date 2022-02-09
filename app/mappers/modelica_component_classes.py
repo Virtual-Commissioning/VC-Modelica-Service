@@ -1050,6 +1050,10 @@ class Fan(MS4VCObject):
         self.component_string += f'''
         Buildings.Fluid.Movers.SpeedControlled_y {self.modelica_name}(
             redeclare package Medium = {self.medium.name},
+            energyDynamics=Modelica.Fluid.Types.Dynamics.SteadyState,
+            addPowerToMedium=false,
+            show_T=true,
+            riseTime=120,
             per(pressure(V_flow(displayUnit="m3/s")={{{pressure_curve_flow}}}, dp={{{pressure_curve}}}),
             use_powerCharacteristic=true,
             power(V_flow(displayUnit="m3/s")={{{power_curve_flow}}}, P={{{power_curve}}})))
