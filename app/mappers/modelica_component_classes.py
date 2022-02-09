@@ -133,8 +133,6 @@ class ModelicaModel:
             elif component["ComponentType"] == "PressureSensor":
 
                 obj = PressureSensor(component, x_pos, y_pos)
-                
-                obj.connect_to_outside(self.components["outside"])
 
             elif component["ComponentType"] == "TemperatureSensor":
 
