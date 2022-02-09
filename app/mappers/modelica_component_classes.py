@@ -1076,8 +1076,9 @@ class Room(MS4VCObject):
 
     def create_component_string(self):
         self.component_string += f"""
-        ToolchainLib.RoomDetached {self.modelica_name}(redeclare package MediumA = 
-            {MediumVentilation().name})
+        ToolchainLib.RoomDetachedDetailedProfile {self.modelica_name}(redeclare package MediumA = 
+            {MediumVentilation().name},
+            nPersons = 6)
             annotation (Placement(transformation(extent={{{{{0+self.x_pos*30},{0+self.y_pos*30}}},{{{20+self.x_pos*30},{20+self.y_pos*30}}}}})));
         """
 
