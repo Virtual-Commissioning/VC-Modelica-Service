@@ -34,8 +34,7 @@ def create_modelica_model():
 
     # Needs info on package/model name and simulation parameters (days)
     package_name = "Auto_Generated"
-    model_name = "Model"
-    days = 1
+    model_name = data_parsed["projectID"]
 
     modelica_model, modelica_package, model = map_to_modelica_model(system,wanted_systems,rooms,data_parsed["simStart"],data_parsed["simStop"],package_name,model_name)
 
