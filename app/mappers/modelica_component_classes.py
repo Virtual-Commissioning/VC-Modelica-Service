@@ -1185,7 +1185,7 @@ class TemperatureSensor(MS4VCObject):
             raise Exception(f"Error: {self.__class__.__name__} does not return {PV_type}!")
  
 class Controller:
-    def __init__(self, host: MS4VCObject, x_pos, y_pos, k = 1, t_i = 0.5, y_min = 0):
+    def __init__(self, host: MS4VCObject, x_pos, y_pos, k = 1, t_i = 0.5, y_min = 0, on_off_switch = False):
         self.name = "con"+host.name
         self.modelica_name = self.name
         self.host = host
@@ -1207,6 +1207,7 @@ class Controller:
         self.k = k
         self.t_i = t_i
         self.y_min = y_min
+        self.on_off_switch = on_off_switch
         self.create_component_string()
     
     def connect_to_host(self):
@@ -1230,7 +1231,18 @@ class Controller:
             reverseAction = "false"
 
         if self.control_type in ["P", "PI", "PD", "PID"]:
-            self.component_string += f'''
+
+            if self.on_off_switch == True:
+                self.component_string += f'''
+        ToolchainLib.PIDControl_ON_OFF {self.name}(conPID(controllerType=Modelica.Blocks.Types.SimpleController.{self.control_type},
+            k={self.k},
+            Ti={self.t_i},
+            yMin={self.y_min},
+            reverseAction={reverseAction}), setPoint_high={self.setpoint})
+            annotation (Placement(transformation(extent={{{{{0+self.x_pos*30},{0+self.y_pos*30}}},{{{20+self.x_pos*30},{20+self.y_pos*30}}}}})));
+        '''
+            elif self.on_off_switch == False:
+                self.component_string += f'''
         ToolchainLib.PIDControl {self.name}(conPID(controllerType=Modelica.Blocks.Types.SimpleController.{self.control_type},
             k={self.k},
             Ti={self.t_i},
