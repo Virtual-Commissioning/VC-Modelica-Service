@@ -538,11 +538,6 @@ class HeatingCoil(MS4VCObject):
         super().__init__(FSC_object,x_pos, y_pos)
 
     def create_component_string(self):
-        delta_T_A = self.FSC_object["NomSupplyTemperatureSecondary"]-self.FSC_object["NomReturnTemperaturePrimary"]
-        delta_T_B = self.FSC_object["NomReturnTemperatureSecondary"]-self.FSC_object["NomSupplyTemperaturePrimary"]
-        LMTD = (delta_T_A-delta_T_B)/(math.log(delta_T_A)-math.log(delta_T_B))
-        Q = self.FSC_object["NomPower"]
-        UA = Q/LMTD
 
         self.component_string += f'''
         Buildings.Fluid.HeatExchangers.DryCoilEffectivenessNTU {self.modelica_name}(
@@ -554,7 +549,7 @@ class HeatingCoil(MS4VCObject):
             dp1_nominal={self.FSC_object["NomDpPrimary"]},
             dp2_nominal={self.FSC_object["NomDpSecondary"]},
             configuration=Buildings.Fluid.Types.HeatExchangerConfiguration.CrossFlowStream1MixedStream2Unmixed,
-            Q_flow_nominal={Q},
+            Q_flow_nominal={self.FSC_object["NomPower"]},
             T_a1_nominal={self.FSC_object["NomSupplyTemperaturePrimary"]+273.15},
             T_a2_nominal={self.FSC_object["NomSupplyTemperatureSecondary"]+273.15})
             annotation (Placement(transformation(extent={{{{{20+self.x_pos*30},{0+self.y_pos*30}}},{{{0+self.x_pos*30},{20+self.y_pos*30}}}}})));
