@@ -66,7 +66,7 @@ class ModelicaModel:
         if "cooling" in wanted_systems:
             self.add_component(Plant(-2, 0, "coolingPlant", 0.1, MediumCooling(),5))
         if "heating" in wanted_systems:
-            self.add_component(Plant(-3, 0, "heatingPlant", 0.5, MediumHeating(),70))
+            self.add_component(HeatingPlantWeatherCompensation(-3, 0, "heatingPlant", 0.5, MediumHeating(),70,-12))
         
         for component in system:
             x_pos = counter % gridwidth
@@ -861,6 +861,39 @@ class Plant(MS4VCObject):
             m_flow_nom={self.nom_flow},
             setpoint={self.temp})
             annotation (Placement(transformation(extent={{{{{0+self.x_pos*30},{0+self.y_pos*30}}},{{{20+self.x_pos*30},{20+self.y_pos*30}}}}})));
+        """
+
+class HeatingPlantWeatherCompensation(MS4VCObject):
+    def __init__(self, x_pos, y_pos, name, nom_flow, medium, nom_sup_temp,nom_ext_temp=-12):
+        
+        self.nom_flow = nom_flow
+        self.nom_sup_temp = nom_sup_temp
+        self.medium = medium
+        self.nom_ext_temp = nom_ext_temp
+
+        super().__init__(None,x_pos, y_pos, name)
+
+        self.connection_string += f'''
+        connect({self.modelica_name}.T_ext, weaBus.TDryBul) annotation (Line(points={{{{-46,16}},{{-28,
+            16}}}}, color={{0,127,255}}));
+            '''
+
+        self.create_port_names()
+        
+
+    def find_medium(self):
+        '''
+        Overwrite find_medium method of super class since it is defined in constructor.
+        '''
+        pass
+
+    def create_component_string(self):
+        self.component_string += f"""
+        ToolchainLib.GenericPlant_WeatherCompensation {self.modelica_name}(
+            redeclare package Medium = {self.medium.name},
+            nom_sup_temp={self.nom_sup_temp},
+            nom_ext_temp={self.nom_ext_temp})
+            annotation (Placement(transformation(extent={{{{{0+self.x_pos*30},{0+self.y_pos*30}}},{{{20+self.x_pos*30},{20+self.y_pos*30}}}}})));    
         """
 
 class Outside(MS4VCObject):
