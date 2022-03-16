@@ -603,13 +603,13 @@ class Tee(MS4VCObject):
         port_flows = []
         for port in ports:
             if port["ConnectorType"] == "suppliesFluidTo":
-                v_nom_flow = -port["DesignFlow"]
+                v_nom_flow = -port["DesignFlow"]/1000 # m3/s
                 m_nom_flow = round(v_nom_flow*self.medium.rho,6)
 
                 port_flows.append(m_nom_flow)
             
             else:
-                v_nom_flow = port["DesignFlow"]
+                v_nom_flow = port["DesignFlow"]/1000 # m3/s
                 m_nom_flow = round(v_nom_flow*self.medium.rho,6)
 
                 port_flows.append(m_nom_flow)
