@@ -132,8 +132,8 @@ dmypy.json
 # Modelica
 .mo
 .mos
-temp
-app/temp
+Temp
+app/Temp
 
 # Workspace
 tests/
