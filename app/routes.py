@@ -5,7 +5,7 @@ import time
 
 from app import app
 from app.services import modelica_simulation_service
-from app.mappers.modelica_mapper import map_to_modelica_model
+from app.mappers.modelica_mapper import map_to_modelica_model, map_to_soep
 
 @app.route('/')
 @app.route('/index')
