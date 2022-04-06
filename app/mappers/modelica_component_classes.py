@@ -164,6 +164,9 @@ class ModelicaModel:
             '''
 
     def connect_all_components(self):
+        '''
+        Loops over all components and instantiates all input connections, and any connections to rooms and/or controllers
+        '''
         
         for component in self.components.values():
             
