@@ -81,9 +81,9 @@ def run_soep():
     data = request.get_data()
     
     data_parsed = json.loads(data)
-    wanted_systems = data_parsed["systems"]
+    wanted_systems = ["ventilation","cooling","heating"]
     system = modelica_simulation_service.extract_components_from_data(data_parsed, wanted_systems) # Extract system from data
-    spaces = data_parsed["spaces"]["SpacesInModel"]
+    spaces = list(data_parsed["BOT"]["Site"]["Buildings"][0].values())[0]["Zones"]
 
     # Needs info on package/model name and simulation parameters (days)
     package_name = "Auto_Generated"
@@ -107,21 +107,21 @@ def run_soep():
 
     build_stop = time.perf_counter()
 
-    modelica_simulation_service.simulate_modelica_model(data_parsed["simStart"],data_parsed["simStop"],"Temp/results",pa_path,model=package_name+'.'+model_name)
-    sim_stop = time.perf_counter()
+    # modelica_simulation_service.simulate_modelica_model(data_parsed["simStart"],data_parsed["simStop"],"Temp/results",pa_path,model=package_name+'.'+model_name)
+    # sim_stop = time.perf_counter()
 
-    results = modelica_simulation_service.read_simulation_results(model,"Temp/results/"+model_name+".mat")
+    # results = modelica_simulation_service.read_simulation_results(model,"Temp/results/"+model_name+".mat")
 
-    read_stop = time.perf_counter()
+    # read_stop = time.perf_counter()
 
-    dict_output = {
-        "build time [s]" : round(build_stop-start_time,2)
-        ,"simulation time [s]":  round(sim_stop-build_stop,2)
-        ,"result reading time [s]":  round(read_stop-sim_stop,2)
-        # ,"package": modelica_package
-        # ,"model": modelica_model
-        ,"results": results
-    }
+    # dict_output = {
+    #     "build time [s]" : round(build_stop-start_time,2)
+    #     ,"simulation time [s]":  round(sim_stop-build_stop,2)
+    #     ,"result reading time [s]":  round(read_stop-sim_stop,2)
+    #     # ,"package": modelica_package
+    #     # ,"model": modelica_model
+    #     ,"results": results
+    # }
 
-    json_output = json.dumps(dict_output,indent=4)
-    return Response(json_output,content_type="text/json")
+    # json_output = json.dumps(dict_output,indent=4)
+    return Response(modelica_model,content_type="text/json")
