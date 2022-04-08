@@ -15,14 +15,14 @@ def map_to_modelica_model(system,wanted_systems,rooms,start_day,stop_day,package
 
     return mo_file, pa_file, model
 
-def map_to_soep(system,wanted_systems,spaces,start_day,stop_day,package_name = "Auto_Generated", model_name = "Model",idf_path = "Temp/idf_file.idf"):
+def map_to_soep(system,wanted_systems,spaces,start_day,stop_day,package_name = "Auto_Generated", model_name = "Model",idf_path = "Temp/idf_file.idf", epw_path="Temp/DNK_SL_Copenhagen-Roskilde.AP.061700_TMYx.mos"):
     import app.mappers.modelica_templates_soep as cl
    
     model = cl.ModelicaModel(package_name, model_name,start_day,stop_day)
 
     model.add_components(system,wanted_systems)
     
-    model.add_rooms(spaces,idf_path)
+    model.add_rooms(spaces,idf_path,epw_path)
 
     model.create_modelica_model()
 
