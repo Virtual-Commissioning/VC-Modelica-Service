@@ -1136,8 +1136,8 @@ class Room():
     def create_component_string(self):
         self.component_string += f"""
         ToolchainLib.RoomSOEP {self.modelica_name}(redeclare package MediumA = 
-            {self.medium.name}, zoneName="{self.IDF_name},
-            q_50 = {self.FSC_object["Floor_Area"]*0.001*self.medium.rho}")
+            {self.medium.name}, zoneName="{self.IDF_name}",
+            q_50 = {self.FSC_object["Floor_Area"]*0.001*self.medium.rho})
             annotation (Placement(transformation(extent={{{{{0+self.x_pos*30},{0+self.y_pos*30}}},{{{20+self.x_pos*30},{20+self.y_pos*30}}}}})));
         """
 
