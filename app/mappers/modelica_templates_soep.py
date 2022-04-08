@@ -213,11 +213,20 @@ class ModelicaModel:
                 room_tag = component.FSC_object["ContainedInSpaces"][0]
                 self.connection_string += component.connect_to_room(self.rooms[room_tag])
     
-    def add_rooms(self, room_list):
+    def add_rooms(self, room_list, idf_path,epw_path):
 
         counter = 3 # Counter for distribution of components
         gridwidth = 3 # Width of the visual distribution of the components
         
+        
+
+        x_pos = counter % gridwidth
+        y_pos = - int((counter - x_pos)/gridwidth)
+
+        self.rooms["building"] = Building(x_pos,y_pos,idf_path,epw_path)
+
+        counter += 1
+
         for room in room_list:
             
             room = list(room.values())[0]
@@ -1171,6 +1180,37 @@ class Room():
             return "co2Level"
         else:
             raise Exception(f"Error: {self.__class__.__name__} does not return {PV_type}!")
+
+class Building(MS4VCObject):
+    def __init__(self, x_pos, y_pos, idf_path, epw_path):
+
+        super().__init__(None, x_pos, y_pos, "building")
+        
+        self.idf_path = idf_path
+        self.epw_path = epw_path
+
+        self.create_component_string()
+        
+
+    def find_medium(self):
+        '''
+        Overwrite find_medium method of super class since it is not used in class.
+        '''
+        pass
+    
+    def create_component_string(self):
+        self.component_string += f'''
+        inner Buildings.ThermalZones.EnergyPlus.Building building(
+            idfName="{self.idf_path}",
+            weaName="{self.epw_path}",
+            usePrecompiledFMU=false,
+            showWeatherData=true,
+            computeWetBulbTemperature=false)
+            "Building model"
+            annotation (Placement(transformation(extent={{{{{0+self.x_pos*30},{0+self.y_pos*30}}},{{{20+self.x_pos*30},{20+self.y_pos*30}}}}})));
+            '''
+    
+
 
 class PressureSensor(MS4VCObject):
 
