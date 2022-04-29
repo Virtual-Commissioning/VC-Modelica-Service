@@ -56,12 +56,12 @@ class ModelicaModel:
         self.model_string = self.start_string + self.component_string + self.room_string + self.connection_string + self.end_string
         self.create_modelica_package()
 
-    def add_components(self, system, wanted_systems):
+    def add_components(self, system, wanted_systems,epw_path):
         counter = 0 # Counter for distribution of components
         gridwidth = 9 # Width of the visual distribution of the components
         
         ## Special objects:
-        self.add_component(Outside(-1, 0, "outside"))
+        self.add_component(Outside(-1, 0, epw_path, "outside"))
         self.connection_string += self.components["outside"].connect_to_weaBus()
         if "cooling" in wanted_systems:
             self.add_component(Plant(-2, 0, "coolingPlant", 0.1, MediumCooling(),5))
