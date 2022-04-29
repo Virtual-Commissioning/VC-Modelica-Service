@@ -1189,8 +1189,8 @@ class Building(MS4VCObject):
 
         super().__init__(None, x_pos, y_pos, "building")
         
-        self.idf_path = idf_path
-        self.epw_path = epw_path
+        self.idf_path = os.path.join(os.getcwd(),idf_path).replace("\\","/")
+        self.epw_path = os.path.join(os.getcwd(),epw_path).replace("\\","/")
 
         self.create_component_string()
         
