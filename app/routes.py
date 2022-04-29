@@ -81,13 +81,21 @@ def run_soep():
     data = request.get_data()
     
     data_parsed = json.loads(data)
-    wanted_systems = ["ventilation","cooling","heating"]
+    wanted_systems = data_parsed["systems"]
     system = modelica_simulation_service.extract_components_from_data(data_parsed, wanted_systems) # Extract system from data
     spaces = list(data_parsed["BOT"]["Site"]["Buildings"][0].values())[0]["Zones"]
+
 
     # Needs info on package/model name and simulation parameters (days)
     package_name = "Auto_Generated"
     model_name = data_parsed["projectID"]
+
+    # Write IDF file
+    idf = data_parsed["IDF"]
+    pa_fp = os.path.join("Temp",f"{model_name}.idf")
+    with open(pa_fp, "w") as idf_file:
+        idf_file.write(idf)
+        idf_file.close()
 
     modelica_model, modelica_package, model = map_to_soep(system,wanted_systems,spaces,data_parsed["simStart"],data_parsed["simStop"],package_name,model_name)
 
