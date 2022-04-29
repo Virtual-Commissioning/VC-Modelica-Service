@@ -272,9 +272,6 @@ class MS4VCObject:
         elif FSC_object != None:
             self.name = FSC_object["Tag"]
             self.modelica_name = self.modelica_name_prefix+self.name
-        elif name != None:
-            self.name = name
-            self.modelica_name = name
         else:
             raise Exception("Either FSC_object or name must be specified!")
 
