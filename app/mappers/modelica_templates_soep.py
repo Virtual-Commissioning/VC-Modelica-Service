@@ -57,6 +57,9 @@ class ModelicaModel:
         for room in self.rooms.values():
             room: Room
             self.room_string += room.component_string
+        for opening in self.openings:
+            opening: Opening
+            self.component_string += opening.component_string
         self.model_string = self.start_string + self.component_string + self.room_string + self.connection_string + self.end_string
         self.create_modelica_package()
 
