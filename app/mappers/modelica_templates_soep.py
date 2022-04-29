@@ -1,5 +1,8 @@
 import math
 import fluids
+import os
+
+from numpy import median
 
 class ModelicaModel:
     
