@@ -1285,6 +1285,14 @@ class Opening(MS4VCObject):
             raise Exception("Max output connections for component reached")
 
 
+class Door(Opening):
+    modelica_name_prefix = "door"
+
+    def __init__(self, FSC_object, x_pos, y_pos):
+
+        super().__init__(FSC_object,x_pos, y_pos)
+        
+        self.opening_factor = 0
 
 class PressureSensor(MS4VCObject):
 
