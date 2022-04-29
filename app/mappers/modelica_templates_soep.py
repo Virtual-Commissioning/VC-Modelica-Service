@@ -312,6 +312,8 @@ class ModelicaModel:
             self.rooms[new_room.name] = new_room
             self.connection_string += self.rooms[new_room.name].connect_to_weaBus()
             counter += 1
+        
+        self.add_and_connect_openings()
 
 class Medium():
     def __init__(self, name, rho, temp, viscosity):
