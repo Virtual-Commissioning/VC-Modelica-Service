@@ -914,10 +914,11 @@ class HeatingPlantWeatherCompensation(MS4VCObject):
         """
 
 class Outside(MS4VCObject):
-    def __init__(self, x_pos, y_pos, name = "outside"):
+    def __init__(self, x_pos, y_pos, epw_path, name = "outside"):
 
         super().__init__(None, x_pos, y_pos, name)
-    
+        self.epw_path = os.path.join(os.getcwd(),epw_path).replace("\\","/")
+
     def find_medium(self):
         '''
         Overwrite find_medium method of super class since it is not used in class.
@@ -938,8 +939,7 @@ class Outside(MS4VCObject):
         Buildings.BoundaryConditions.WeatherData.Bus weaBus
             annotation (Placement(transformation(extent={{{{{0+self.x_pos*30},{0+(self.y_pos+1)*30}}},{{{20+self.x_pos*30},{20+(self.y_pos+1)*30}}}}})));
         
-        Buildings.BoundaryConditions.WeatherData.ReaderTMY3 weaDat(filNam=
-            Modelica.Utilities.Files.loadResource("modelica://Buildings/Resources/weatherdata/USA_IL_Chicago-OHare.Intl.AP.725300_TMY3.mos"))
+        Buildings.BoundaryConditions.WeatherData.ReaderTMY3 weaDat(filNam="{self.epw_path}")
             annotation (Placement(transformation(extent={{{{{0+self.x_pos*30},{0+(self.y_pos+2)*30}}},{{{20+self.x_pos*30},{20+(self.y_pos+2)*30}}}}})));
         """
 
