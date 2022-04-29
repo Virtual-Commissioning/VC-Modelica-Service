@@ -1213,6 +1213,77 @@ class Building(MS4VCObject):
             annotation (Placement(transformation(extent={{{{{0+self.x_pos*30},{0+self.y_pos*30}}},{{{20+self.x_pos*30},{20+self.y_pos*30}}}}})));
             '''
     
+class Opening(MS4VCObject):
+    
+    modelica_name_prefix = "opening"
+
+    def __init__(self, FSC_object, x_pos, y_pos):
+
+        super().__init__(FSC_object,x_pos, y_pos,name = FSC_object["Name"].split("_")[0])
+        self.modelica_name = self.modelica_name_prefix+self.name
+
+        self.width =  min([self.calculate_3d_length(i,j) for j in self.FSC_object["VertexCoordinates"] for i in self.FSC_object["VertexCoordinates"] if i != j])
+        self.height =  median([self.calculate_3d_length(i,j) for j in self.FSC_object["VertexCoordinates"] for i in self.FSC_object["VertexCoordinates"] if i != j])
+        self.crack_width = 0.003
+        self.opening_factor = 1
+
+
+    def find_connections(self):
+        connections = []
+        connections.append(self.FSC_object["Name"].split("_")[1])
+        connections.append(self.FSC_object["Outside_Boundary_Condition_Object"].split("_")[1])
+        return connections
+
+    def find_medium(self):
+        self.medium = MediumVentilation()
+
+    def create_component_string(self):
+        self.component_string += f'''
+        Buildings.Airflow.Multizone.DoorOperable {self.modelica_name}(
+            redeclare package Medium = {self.medium.name},
+            wOpe={self.width},
+            hOpe={self.height},
+            LClo={(self.width*2+self.height*2)*self.crack_width})
+            annotation (Placement(transformation(extent={{{{{0+self.x_pos*30},{0+self.y_pos*30}}},{{{20+self.x_pos*30},{20+self.y_pos*30}}}}})));
+            
+          Modelica.Blocks.Sources.Constant {self.modelica_name}_k(k=1)
+            annotation (Placement(transformation(extent={{{{{0+self.x_pos*30},{0+self.y_pos*30}}},{{{20+self.x_pos*30},{20+self.y_pos*30}}}}})));
+        '''
+
+        self.connection_string +=f'''
+        connect({self.modelica_name}_k.y, {self.modelica_name}.y);
+        '''
+
+    def calculate_3d_length(self,coordinate1,coordinate2):
+        len_X = coordinate1["X"] - \
+            coordinate2["X"]
+        len_Y = coordinate1["Y"] - \
+            coordinate2["Y"]
+        len_Z = coordinate1["Z"] - \
+            coordinate2["Z"]
+        length = round(math.sqrt(len_X**2+len_Y**2+len_Z**2),4)
+        return length
+
+    def get_input_port(self,room):
+        if len(self.instantiated_connections["input"]) == 0:
+            self.instantiated_connections["input"].append(room.name)
+            return "port_a1"
+        if len(self.instantiated_connections["input"]) == 1:
+            self.instantiated_connections["input"].append(room.name)
+            return "port_a2"
+        else:
+            raise Exception("Max input connections for component reached")
+
+    def get_output_port(self,room):
+        if len(self.instantiated_connections["output"]) == 0:
+            self.instantiated_connections["output"].append(room.name)
+            return "port_b2"
+        if len(self.instantiated_connections["output"]) == 1:
+            self.instantiated_connections["output"].append(room.name)
+            return "port_b1"
+        else:
+            raise Exception("Max output connections for component reached")
+
 
 
 class PressureSensor(MS4VCObject):
