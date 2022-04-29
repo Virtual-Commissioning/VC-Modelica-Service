@@ -263,7 +263,10 @@ class MS4VCObject:
 
     def __init__(self, FSC_object, x_pos, y_pos, name = None):
         self.FSC_object = FSC_object
-        if FSC_object != None:
+        if name != None:
+            self.name = name
+            self.modelica_name = name
+        elif FSC_object != None:
             self.name = FSC_object["Tag"]
             self.modelica_name = self.modelica_name_prefix+self.name
         elif name != None:
