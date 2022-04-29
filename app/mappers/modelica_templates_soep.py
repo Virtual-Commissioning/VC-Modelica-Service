@@ -11,6 +11,7 @@ class ModelicaModel:
         self.model_name = model_name
         self.components = {}
         self.rooms = {}
+        self.openings = []
         self.component_string = ""
         self.room_string = ""
         self.connection_string = '''\n\tequation\n'''
