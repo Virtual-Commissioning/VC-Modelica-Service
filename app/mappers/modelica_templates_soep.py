@@ -216,6 +216,76 @@ class ModelicaModel:
                 room_tag = component.FSC_object["ContainedInSpaces"][0]
                 self.connection_string += component.connect_to_room(self.rooms[room_tag])
     
+    def add_and_connect_openings(self, counter_start = 0):
+        counter = counter_start
+        gridwidth = 3 # Width of the visual distribution of the components
+
+        for room in self.rooms.values():
+            if isinstance(room, Room):
+                x_pos = counter % gridwidth
+                y_pos = - int((counter - x_pos)/gridwidth)
+
+                surfaces = list(room.FSC_object["Surfaces"])
+                
+                surfaces = self.fix_list(surfaces)
+                for surface in surfaces:
+                    if surface["Outside_Boundary_Condition"] != "Outdoors":
+                        for door in self.fix_list(surface["SubSurfaces"]["Doors"]):
+                            self.add_opening(Door(door,x_pos,y_pos))
+                            
+                        for opening in self.fix_list(surface["SubSurfaces"]["Openings"]):
+                            self.add_opening(Opening(opening,x_pos,y_pos))
+
+                            
+        room_tags = {IDF_tag:arch_tag for (IDF_tag,arch_tag) in zip([room.IDF_name for room in self.rooms.values() if room.name != "building"],[room.name for room in self.rooms.values() if room.name != "building"])}
+        for opening in self.openings:
+            opening: Opening
+            opening.create_component_string()
+            connections_IDF_tags = opening.find_connections()
+            connections_arch_tags = []
+            
+            self.connection_string += opening.connection_string
+
+            for IDF_tag in connections_IDF_tags:
+                arch_tag = room_tags[IDF_tag]
+                connections_arch_tags.append(arch_tag)
+            
+            for tag in connections_arch_tags:
+
+                # Get name of Modelica port of room:
+                connected_room = self.rooms[tag]
+                room_port_name_1 = connected_room.get_opening_port(opening)
+                room_port_name_2 = connected_room.get_opening_port(opening)
+
+                # Get name of Modelica output port of connected component:
+                opening_port_name_1 = opening.get_input_port(connected_room)
+                opening_port_name_2 = opening.get_output_port(connected_room)
+
+                self.connection_string += f'''
+                connect({connected_room.modelica_name}.{room_port_name_1},{opening.modelica_name}.{opening_port_name_1}) annotation (Line(points={{{{-46,16}},{{-28,
+                    16}}}}, color={{0,127,255}}));
+                connect({connected_room.modelica_name}.{room_port_name_2},{opening.modelica_name}.{opening_port_name_2}) annotation (Line(points={{{{-46,16}},{{-28,
+                    16}}}}, color={{0,127,255}}));
+                    '''
+                
+            
+    def add_opening(self, opening):
+
+        if opening.modelica_name in [op.modelica_name for op in self.openings]:
+            pass
+        else:
+            self.openings.append(opening)
+        
+
+
+    def fix_list(self, surfaces):
+        "Function to fix the weird shape of the surface lists - should be deprecated later"
+        new_list = []
+        for surface in surfaces:
+            surface_object = list(surface.values())[0]
+            new_list.append(surface_object)
+        return new_list
+
     def add_rooms(self, room_list, idf_path,epw_path):
 
         counter = 3 # Counter for distribution of components
