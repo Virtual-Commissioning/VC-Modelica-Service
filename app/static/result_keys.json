@@ -1,0 +1,95 @@
+{
+    "FlowSegment": [
+        "m_flow",
+        "dp"
+    ],
+    "Pump": [
+        "pum.m_flow",
+        "pum.dp",
+        "pum.P",
+        "pum.y"
+    ],
+    "Radiator": [
+        "rad.m_flow",
+        "rad.dp",
+        "rad.Q_flow",
+        "rad.sta_a.T",
+        "rad.sta_b.T"
+    ],
+    "HeatExchanger": [
+        "m2_flow",
+        "dp2",
+        "Q2_flow",
+        "sta_a2.T",
+        "sta_b2.T"
+    ],
+    "Bend": [
+        "m_flow",
+        "dp"
+    ],
+    "Tee": [
+        "res1.m_flow",
+        "res2.m_flow",
+        "res3.m_flow",
+        "res1.dp",
+        "res2.dp",
+        "res3.dp"
+    ],
+    "Reduction": [
+        "m_flow",
+        "dp"
+    ],
+    "BalancingValve": [
+        "m_flow",
+        "dp",
+        "k"
+    ],
+    "MotorizedValve": [
+        "m_flow",
+        "dp",
+        "y"
+    ],
+    "CheckValve": [
+        "m_flow",
+        "dp",
+        "k"
+    ],
+    "ShuntValve": [
+        "port_a1.m_flow",
+        "port_b1.m_flow",
+        "port_a2.m_flow",
+        "port_b2.m_flow",
+        "res.m_flow"
+    ],
+    "AirTerminal": [
+        "m_flow",
+        "dp"
+    ],
+    "MotorizedDamper": [
+        "m_flow",
+        "dp",
+        "k"
+    ],
+    "BalancingDamper": [
+        "m_flow",
+        "dp",
+        "k"
+    ],
+    "Fan": [
+        "m_flow",
+        "dp",
+        "P",
+        "y"
+    ],
+    "PressureSensor": [
+        "statPres"
+    ],
+    "TemperatureSensor": [
+        "T"
+    ],
+    "Room": [
+        "heaPorAir.T",
+        "heaPorRad.T",
+        "senCO2.ppm"
+    ]
+}
