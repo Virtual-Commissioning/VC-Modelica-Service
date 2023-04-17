@@ -356,6 +356,14 @@ class MS4VCObject:
         '''
         return ""
 
+    def create_annotation(self):
+        
+        ann = f"\n\t\t\tannotation (Placement(transformation(extent={{{{{0+self.x_pos*30},{0+self.y_pos*30}}},{{{20+self.x_pos*30},{20+self.y_pos*30}}}}}))"
+        if self.name != self.modelica_name:
+            ann += f", _CDE(@id={self.name})"
+        ann += ");\n"
+        return ann
+        
 class Segment(MS4VCObject):
 
     modelica_name_prefix = "seg"
@@ -376,9 +384,8 @@ class Segment(MS4VCObject):
             allowFlowReversal=true,
             m_flow_nominal={round(m_nom_flow,6)},
             dh={dimension},
-            length={length})
-            annotation (Placement(transformation(extent={{{{{0+self.x_pos*30},{0+self.y_pos*30}}},{{{20+self.x_pos*30},{20+self.y_pos*30}}}}})));
-        '''
+            length={length})'''
+        self.component_string += self.create_annotation()
 
     def calculate_length(self):
         '''
@@ -414,9 +421,8 @@ class Pump(MS4VCObject):
             pum(
             per(pressure(V_flow(displayUnit="m3/s")={{{pressure_curve_flow}}}, dp={{{pressure_curve}}}),
             use_powerCharacteristic=true,
-            power(V_flow(displayUnit="m3/s")={{{power_curve_flow}}}, P={{{power_curve}}}))))
-            annotation (Placement(transformation(extent={{{{{0+self.x_pos*30},{0+self.y_pos*30}}},{{{20+self.x_pos*30},{20+self.y_pos*30}}}}})));
-            '''
+            power(V_flow(displayUnit="m3/s")={{{power_curve_flow}}}, P={{{power_curve}}}))))'''
+            self.component_string += self.create_annotation()
         elif self.FSC_object["Control"]["ControlType"] == "ConstantPressureControl":
             self.component_string += f'''
         ToolchainLib.PumpConstantPressure {self.modelica_name}(
@@ -425,18 +431,16 @@ class Pump(MS4VCObject):
             per(pressure(V_flow(displayUnit="m3/s")={{{pressure_curve_flow}}}, dp={{{pressure_curve}}}),
             use_powerCharacteristic=true,
             power(V_flow(displayUnit="m3/s")={{{power_curve_flow}}}, P={{{power_curve}}}))),
-            constPressure(displayUnit="Pa") = {self.FSC_object["Control"]["Pressure"]})
-            annotation (Placement(transformation(extent={{{{{0+self.x_pos*30},{0+self.y_pos*30}}},{{{20+self.x_pos*30},{20+self.y_pos*30}}}}})));
-            '''
+            constPressure(displayUnit="Pa") = {self.FSC_object["Control"]["Pressure"]})'''
+            self.component_string += self.create_annotation()
         elif self.FSC_object["Control"]["ControlType"] == "External":
             self.component_string += f'''
         Buildings.Fluid.Movers.SpeedControlled_y {self.modelica_name}(
             redeclare package Medium = {self.medium.name},
             per(pressure(V_flow(displayUnit="m3/s")={{{pressure_curve_flow}}}, dp={{{pressure_curve}}}),
             use_powerCharacteristic=true,
-            power(V_flow(displayUnit="m3/s")={{{power_curve_flow}}}, P={{{power_curve}}})))
-            annotation (Placement(transformation(extent={{{{{0+self.x_pos*30},{0+self.y_pos*30}}},{{{20+self.x_pos*30},{20+self.y_pos*30}}}}})));
-            '''
+            power(V_flow(displayUnit="m3/s")={{{power_curve_flow}}}, P={{{power_curve}}})))'''
+            self.component_string += self.create_annotation()
         else:
             self.component_string += f'''
             // Control type of pump {self.modelica_name} not recognized. 
@@ -458,25 +462,23 @@ class Radiator(MS4VCObject):
 
     def create_component_string(self):
         self.component_string += f'''
-            ToolchainLib.Radiator {self.modelica_name}(
-                redeclare package Medium = {self.medium.name},
-                rad(
-                Q_flow_nominal={self.FSC_object["NomPower"]},
-                T_a_nominal={self.FSC_object["NomSupplyTemperature"]+273.15},
-                T_b_nominal={self.FSC_object["NomReturnTemperature"]+273.15},
-                {self.ispropin('n')}
-                {self.ispropin('fraRad')}
-                dp_nominal={self.FSC_object["NomDp"]},
-                TAir_nominal={self.FSC_object["NomRoomTemperature"]+273.15})'''
+        ToolchainLib.Radiator {self.modelica_name}(
+            redeclare package Medium = {self.medium.name},
+            rad(
+            Q_flow_nominal={self.FSC_object["NomPower"]},
+            T_a_nominal={self.FSC_object["NomSupplyTemperature"]+273.15},
+            T_b_nominal={self.FSC_object["NomReturnTemperature"]+273.15},
+            {self.ispropin('n')}
+            {self.ispropin('fraRad')}
+            dp_nominal={self.FSC_object["NomDp"]},
+            TAir_nominal={self.FSC_object["NomRoomTemperature"]+273.15})'''
         if "KV" in self.FSC_object.keys():
             self.component_string += f''',
-                trv(Kv={self.FSC_object["KV"]}))
-                annotation (Placement(transformation(extent={{{{{0+self.x_pos*30},{0+self.y_pos*30}}},{{{20+self.x_pos*30},{20+self.y_pos*30}}}}})));
-                '''
+            trv(Kv={self.FSC_object["KV"]}))'''
+            self.component_string += self.create_annotation()
         else:
-            self.component_string += f''')
-                annotation (Placement(transformation(extent={{{{{0+self.x_pos*30},{0+self.y_pos*30}}},{{{20+self.x_pos*30},{20+self.y_pos*30}}}}})));
-            '''
+            self.component_string += f''')'''
+            self.component_string += self.create_annotation()
 
     def create_port_names(self):
         self.port_names = {
@@ -529,9 +531,8 @@ class Bend(MS4VCObject):
         Buildings.Fluid.FixedResistances.PressureDrop {self.modelica_name}(
             redeclare package Medium = {self.medium.name},
             m_flow_nominal={round(m_nom_flow,6)},
-            dp_nominal={dp_nominal})
-            annotation (Placement(transformation(extent={{{{{0+self.x_pos*30},{0+self.y_pos*30}}},{{{20+self.x_pos*30},{20+self.y_pos*30}}}}})));
-            """
+            dp_nominal={dp_nominal})"""
+        self.component_string += self.create_annotation()
 
 class HeatingCoil(MS4VCObject):
 
@@ -555,9 +556,8 @@ class HeatingCoil(MS4VCObject):
             configuration=Buildings.Fluid.Types.HeatExchangerConfiguration.CrossFlowStream1MixedStream2Unmixed,
             Q_flow_nominal={self.FSC_object["NomPower"]},
             T_a1_nominal={self.FSC_object["NomSupplyTemperaturePrimary"]+273.15},
-            T_a2_nominal={self.FSC_object["NomSupplyTemperatureSecondary"]+273.15})
-            annotation (Placement(transformation(extent={{{{{20+self.x_pos*30},{0+self.y_pos*30}}},{{{0+self.x_pos*30},{20+self.y_pos*30}}}}})));
-            '''
+            T_a2_nominal={self.FSC_object["NomSupplyTemperatureSecondary"]+273.15})'''
+        self.component_string += self.create_annotation()
     
     def create_port_names(self):
         '''
@@ -622,9 +622,8 @@ class Tee(MS4VCObject):
         Buildings.Fluid.FixedResistances.Junction {self.modelica_name}(
             redeclare package Medium = {self.medium.name},
             m_flow_nominal={{{port_flows[0]},{port_flows[1]},{port_flows[2]}}},
-            dp_nominal={{0,0,0}})
-            annotation (Placement(transformation(extent={{{{{0+self.x_pos*30},{0+self.y_pos*30}}},{{{20+self.x_pos*30},{20+self.y_pos*30}}}}})));
-        """
+            dp_nominal={{0,0,0}})"""
+        self.component_string += self.create_annotation()
 
     def create_port_names(self):
         self.port_names = {
@@ -683,9 +682,9 @@ class ValveBalancing(MS4VCObject):
             redeclare package Medium = {self.medium.name}, 
             m_flow_nominal= {round(m_nom_flow,6)},
             CvData=Buildings.Fluid.Types.CvTypes.Kv,
-            Kv={self.FSC_object["Kvs"]})
-            annotation (Placement(transformation(extent={{{{{0+self.x_pos*30},{0+self.y_pos*30}}},{{{20+self.x_pos*30},{20+self.y_pos*30}}}}})));
-        
+            Kv={self.FSC_object["Kvs"]})"""
+        self.component_string += self.create_annotation()
+        self.component_string += f"""
         Modelica.Blocks.Sources.Constant {self.modelica_name}_k(k={k})
             annotation (Placement(transformation(extent={{{{{0+self.x_pos*30},{0+self.y_pos*30}}},{{{20+self.x_pos*30},{20+self.y_pos*30}}}}})));
         """
@@ -712,9 +711,8 @@ class ValveMotorized(MS4VCObject):
             redeclare package Medium = {self.medium.name}, 
             m_flow_nominal= {round(m_nom_flow,6)},
             CvData=Buildings.Fluid.Types.CvTypes.Kv,
-            Kv={self.FSC_object["Kvs"]})
-            annotation (Placement(transformation(extent={{{{{0+self.x_pos*30},{0+self.y_pos*30}}},{{{20+self.x_pos*30},{20+self.y_pos*30}}}}})));
-        """
+            Kv={self.FSC_object["Kvs"]})"""
+        self.component_string += self.create_annotation()
     
 class ValveCheck(MS4VCObject):
 
@@ -734,9 +732,8 @@ class ValveCheck(MS4VCObject):
             m_flow_nominal={round(m_nom_flow,6)},
             CvData=Buildings.Fluid.Types.CvTypes.Kv,
             Kv={self.FSC_object["Kvs"]},
-            redeclare package Medium = {self.medium.name})
-            annotation (Placement(transformation(extent={{{{{0+self.x_pos*30},{0+self.y_pos*30}}},{{{20+self.x_pos*30},{20+self.y_pos*30}}}}})));
-        """
+            redeclare package Medium = {self.medium.name})"""
+        self.component_string += self.create_annotation()
 
 class ValveShunt(MS4VCObject):
 
@@ -758,9 +755,8 @@ class ValveShunt(MS4VCObject):
             dh={self.FSC_object["ShuntDiameter"]*0.001},
             length={width}),
             m_flow_nominal={round(m_nom_flow,6)},
-            redeclare package Medium = {self.medium.name})
-            annotation (Placement(transformation(extent={{{{{0+self.x_pos*30},{0+self.y_pos*30}}},{{{20+self.x_pos*30},{20+self.y_pos*30}}}}})));
-        """
+            redeclare package Medium = {self.medium.name})"""
+        self.component_string += self.create_annotation()
     
     def create_port_names(self):
         self.port_names = {
@@ -836,9 +832,8 @@ class Reduction(MS4VCObject):
         Buildings.Fluid.FixedResistances.PressureDrop {self.modelica_name}(
             redeclare package Medium = {self.medium.name},
             m_flow_nominal={round(m_nom_flow,6)},
-            dp_nominal={dp_nominal})
-            annotation (Placement(transformation(extent={{{{{0+self.x_pos*30},{0+self.y_pos*30}}},{{{20+self.x_pos*30},{20+self.y_pos*30}}}}})));
-            """
+            dp_nominal={dp_nominal})"""
+        self.component_string += self.create_annotation()
 
 class Plant(MS4VCObject):
     def __init__(self, x_pos, y_pos, name, nom_flow, medium, temp):
@@ -976,9 +971,8 @@ class AirTerminal(MS4VCObject):
         Buildings.Fluid.FixedResistances.PressureDrop {self.modelica_name}(
             redeclare package Medium = {self.medium.name},
             m_flow_nominal={round(m_nom_flow,6)},
-            dp_nominal={round(dp_nom, 2)})
-            annotation (Placement(transformation(extent={{{{{0+self.x_pos*30},{0+self.y_pos*30}}},{{{20+self.x_pos*30},{20+self.y_pos*30}}}}})));
-            """
+            dp_nominal={round(dp_nom, 2)})"""
+        self.component_string += self.create_annotation()
     
     def connect_to_room(self, room):
         if "fraluft" in self.FSC_object["SystemName"]:
@@ -1022,9 +1016,8 @@ class DamperMotorized(MS4VCObject):
         Buildings.Fluid.Actuators.Dampers.Exponential {self.modelica_name}(
             redeclare package Medium = {self.medium.name}, 
             m_flow_nominal= {round(m_nom_flow,6)},
-            dpDamper_nominal={round(dp_nom, 2)})
-            annotation (Placement(transformation(extent={{{{{0+self.x_pos*30},{0+self.y_pos*30}}},{{{20+self.x_pos*30},{20+self.y_pos*30}}}}})));
-        """
+            dpDamper_nominal={round(dp_nom, 2)})"""
+        self.component_string += self.create_annotation()
 
 class DamperBalancing(MS4VCObject):
 
@@ -1051,9 +1044,9 @@ class DamperBalancing(MS4VCObject):
         Buildings.Fluid.Actuators.Dampers.Exponential {self.modelica_name}(
             redeclare package Medium = {self.medium.name}, 
             m_flow_nominal= {round(m_nom_flow,6)},
-            dpDamper_nominal={round(dp_nom, 2)})
-            annotation (Placement(transformation(extent={{{{{0+self.x_pos*30},{0+self.y_pos*30}}},{{{20+self.x_pos*30},{20+self.y_pos*30}}}}})));
-        
+            dpDamper_nominal={round(dp_nom, 2)})"""
+        self.component_string += self.create_annotation()
+        self.component_string += f"""
         Modelica.Blocks.Sources.Constant {self.modelica_name}_k(k={k})
             annotation (Placement(transformation(extent={{{{{0+self.x_pos*30},{0+self.y_pos*30}}},{{{20+self.x_pos*30},{20+self.y_pos*30}}}}})));
         """
@@ -1086,9 +1079,8 @@ class Fan(MS4VCObject):
             riseTime=120,
             per(pressure(V_flow(displayUnit="m3/s")={{{pressure_curve_flow}}}, dp={{{pressure_curve}}}),
             use_powerCharacteristic=true,
-            power(V_flow(displayUnit="m3/s")={{{power_curve_flow}}}, P={{{power_curve}}})))
-            annotation (Placement(transformation(extent={{{{{0+self.x_pos*30},{0+self.y_pos*30}}},{{{20+self.x_pos*30},{20+self.y_pos*30}}}}})));
-            '''
+            power(V_flow(displayUnit="m3/s")={{{power_curve_flow}}}, P={{{power_curve}}})))'''
+        self.component_string += self.create_annotation()
 
 class Room(MS4VCObject):
     
@@ -1112,9 +1104,8 @@ class Room(MS4VCObject):
         self.component_string += f"""
         ToolchainLib.RoomDetachedDetailedProfile {self.modelica_name}(redeclare package MediumA = 
             {MediumVentilation().name},
-            nPersons = 6)
-            annotation (Placement(transformation(extent={{{{{0+self.x_pos*30},{0+self.y_pos*30}}},{{{20+self.x_pos*30},{20+self.y_pos*30}}}}})));
-        """
+            nPersons = 6)"""
+        self.component_string += self.create_annotation()
 
     def create_port_names(self):
         self.port_names = {
@@ -1162,9 +1153,8 @@ class PressureSensor(MS4VCObject):
     def create_component_string(self):
         self.component_string += f'''
         ToolchainLib.PressureSensor {self.modelica_name}(redeclare package MediumA = 
-            {self.medium.name})
-            annotation (Placement(transformation(extent={{{{{0+self.x_pos*30},{0+self.y_pos*30}}},{{{20+self.x_pos*30},{20+self.y_pos*30}}}}})));
-            '''
+            {self.medium.name})'''
+        self.component_string += self.create_annotation()
 
     def create_port_names(self):
         self.port_names = {
@@ -1209,9 +1199,8 @@ class TemperatureSensor(MS4VCObject):
             m_flow_nominal={round(m_nom_flow,6)},
             transferHeat=true,
             TAmb=294.15,
-            tauHeaTra=600)
-            annotation (Placement(transformation(extent={{{{{0+self.x_pos*30},{0+self.y_pos*30}}},{{{20+self.x_pos*30},{20+self.y_pos*30}}}}})));
-            '''
+            tauHeaTra=600)'''
+        self.component_string += self.create_annotation()
 
     def create_port_names(self):
         self.port_names = {
