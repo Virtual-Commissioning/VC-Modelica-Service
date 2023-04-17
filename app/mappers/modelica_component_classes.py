@@ -360,7 +360,7 @@ class MS4VCObject:
         
         ann = f"\n\t\t\tannotation (Placement(transformation(extent={{{{{0+self.x_pos*30},{0+self.y_pos*30}}},{{{20+self.x_pos*30},{20+self.y_pos*30}}}}}))"
         if self.name != self.modelica_name:
-            ann += f", _CDE(@id={self.name})"
+            ann += f", _CDE(id={self.name})"
         ann += ");\n"
         return ann
         
