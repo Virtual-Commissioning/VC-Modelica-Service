@@ -42,10 +42,11 @@ class ModelicaModel:
         annotation (uses(Buildings(version="7.0.1"), Modelica(version="3.2.3"),ToolchainLib));
         end {self.package_name};'''
     
-    def create_modelica_model(self):
+    def create_modelica_model(self, create_connections = True):
         self.start_model()
         self.end_model()
-        self.connect_all_components()
+        if create_connections:
+            self.connect_all_components()
         for component in self.components.values():
             component: MS4VCObject
             component.create_component_string()
