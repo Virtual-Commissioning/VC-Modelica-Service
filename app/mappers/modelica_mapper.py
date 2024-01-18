@@ -1,4 +1,4 @@
-import app.mappers.modelica_component_classes as cl
+import app.mappers.modelica_component_classes_control_export as cl
 
 def map_to_modelica_model(system,wanted_systems,rooms,start_day,stop_day,package_name = "Auto_Generated", model_name = "Model", create_connections = True):
    
