@@ -10,6 +10,6 @@ To install all necessary packages, run the following command:
 `pip install -r requirements.txt`
 
 # Citation
-Version 1.0 of this work is documented in a scientific article, currently under review. To cite this work, please use:
+Version 1.0 of this work is documented in a scientific article. To cite this work, please use:
 
-E. Fjerbæk, M. Seidenschnur, A. Kücükavci, K. Smith, C. Hviid, *Coupling BIM and detailed Modelica simulations of HVAC systems in a Common Data Environment*, 2023 [Manuscript submitted for publication]
+Fjerbæk, E., Seidenschnur, M., Kücükavci, A., Smith, K., & Hviid, C. (2023). _Coupling BIM and detailed modelica simulations of HVAC systems in a common data environment._ Journal of Building Performance Simulation, 1–16. https://doi.org/10.1080/19401493.2023.2271441
