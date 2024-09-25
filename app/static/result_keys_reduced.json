@@ -1,0 +1,45 @@
+{
+    "Pump": [
+        "pum.m_flow",
+        "pum.dp",
+        "pum.P",
+        "pum.y"
+    ],
+    "Radiator": [
+        "rad.Q_flow",
+        "rad.sta_a.T",
+        "rad.sta_b.T"
+    ],
+    "HeatExchanger": [
+        "m2_flow",
+        "dp2",
+        "Q2_flow",
+        "sta_a2.T",
+        "sta_b2.T"
+    ],
+    "MotorizedValve": [
+        "m_flow",
+        "y"
+    ],
+    "MotorizedDamper": [
+        "m_flow",
+        "y"
+    ],
+    "Fan": [
+        "m_flow",
+        "dp",
+        "P",
+        "y"
+    ],
+    "PressureSensor": [
+        "statPres"
+    ],
+    "TemperatureSensor": [
+        "T"
+    ],
+    "Room": [
+        "heaPorAir.T",
+        "heaPorRad.T",
+        "senCO2.ppm"
+    ]
+}

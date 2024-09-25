@@ -27,13 +27,16 @@ def simulate_modelica_model(sim_start,sim_stop,output_dir,package_path, solver="
     duration = 24*60*60*(sim_stop-sim_start) # set duration in seconds based on input
     intervals = duration/(3600/6) # define number of intervals in output - every 10 minutes
 
-    s=Simulator(model, "dymola",outputDirectory=output_dir,packagePath=package_path) # instantiate model for simulation
+    s=Simulator(model, "dymola",
+                outputDirectory=output_dir,
+                packagePath=package_path) # instantiate model for simulation
 
     s.setStartTime(sim_start*24*3600) # set start time of simulation
     s.setStopTime(sim_stop*24*3600) # set stop time of simulation
     s.setSolver(solver) # set solver - default is DASSL
     s.setNumberOfIntervals(int(intervals)) # define number of intervals in output
     s.showGUI(show=True)  # show Dymola GUI when simulating
+    s.showProgressBar(show=True) # show progress bar when simulating
     print("Starting simulation")
     s.simulate() # simulate model
     print("Simulation done!")
@@ -44,7 +47,7 @@ def read_simulation_results(system: ModelicaModel,mat_file):
     r = Reader(mat_file, "dymola")
 
     # Import needed results keys:    
-    fp = os.path.join(os.path.dirname(__file__), '..\\static\\result_keys.json')
+    fp = os.path.join(os.path.dirname(__file__), '..\\static\\result_keys_reduced.json')
     with open(fp, "r") as res_keys_file:
         res_keys = json.load(res_keys_file)
         res_keys_file.close()
@@ -58,6 +61,8 @@ def read_simulation_results(system: ModelicaModel,mat_file):
         if FSC_object == None:
             continue
         
+        if FSC_object["ComponentType"] not in res_keys.keys():
+            continue
         keys = res_keys[FSC_object["ComponentType"]]
         
         comp_results = {}
