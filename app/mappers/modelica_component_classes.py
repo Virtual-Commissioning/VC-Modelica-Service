@@ -39,7 +39,7 @@ class ModelicaModel:
     def create_modelica_package(self):
         self.package_string = f'''within ;
         package {self.package_name}
-        annotation (uses(Buildings(version="7.0.1"), Modelica(version="3.2.3"),ToolchainLib));
+        annotation (uses(Buildings(version="9.1.1"), Modelica(version="4.0.0"),ToolchainLib(version="2.0")));
         end {self.package_name};'''
     
     def create_modelica_model(self, create_connections = True):
@@ -1268,7 +1268,7 @@ class Controller:
             k={self.k},
             Ti={self.t_i},
             yMin={self.y_min},
-            reverseAction={reverseAction}), setPoint_high={self.setpoint})
+            reverseActing={reverseAction}), setPoint_high={self.setpoint})
             annotation (Placement(transformation(extent={{{{{0+self.x_pos*30},{0+self.y_pos*30}}},{{{20+self.x_pos*30},{20+self.y_pos*30}}}}})));
         '''
             elif self.on_off_switch == False:
@@ -1277,7 +1277,7 @@ class Controller:
             k={self.k},
             Ti={self.t_i},
             yMin={self.y_min},
-            reverseAction={reverseAction}), setPoint={self.setpoint})
+            reverseActing={reverseAction}), setPoint={self.setpoint})
             annotation (Placement(transformation(extent={{{{{0+self.x_pos*30},{0+self.y_pos*30}}},{{{20+self.x_pos*30},{20+self.y_pos*30}}}}})));
         '''
 
