@@ -1,3 +1,6 @@
+# DEPRECATED
+This repository is deprecated. The main functionality (the parsing algorithm) has moved  [here](https://github.com/efjerb/ModelicaParser).
+
 # VC-Modelica-Service
 Create and simulate models in Modelica based on BIM input from the API
 
